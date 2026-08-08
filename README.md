@@ -97,17 +97,36 @@ switches:
 | theme | auto, dark, light | Farbmodus der Karte |
 | access_points | Liste | APs, die oberhalb der Switches erscheinen |
 | switches | Liste | Switches mit den darzustellenden Ports |
+| group / area | Text | Optionale Gruppierung von Switches, etwa nach Etage oder Raum |
+| collapsed | Boolean | Blendet die Portansicht des Switches beim Laden ein oder aus |
 | status_entity | Entity-ID | Optionaler Online-Status eines AP, Switches oder Ports |
 | clients_entity | Entity-ID | Zustand wird als Client-Anzahl angezeigt |
 | speed_entity | Entity-ID | Optionaler Text unter einem Port, etwa 1 Gbit/s |
+| rx_entity / tx_entity | Entity-ID | Optionaler aktueller Empfangs- bzw. Sendendurchsatz eines Ports |
 | poe_entity | Entity-ID | Bei on erscheint am Port ein PoE-Symbol |
 | poe_power_entity | Entity-ID | Optionale aktuelle PoE-Leistung unter dem Port, etwa 7,90 W |
+| poe_budget_entity / poe_budget | Entity-ID / Zahl | Optionales PoE-Watt-Budget eines Switches |
+| poe_usage_entity | Entity-ID | Optionaler Gesamtverbrauch; sonst werden die PoE-Portwerte summiert |
 | uplink.switch / uplink.port | Text / Zahl | Verknüpft einen AP mit einem Switch-Port |
 | uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch-Verbindung |
 
-Die kürzeren Aliasse entity, clients, poe, poe_power und speed werden ebenfalls akzeptiert.
+Die kürzeren Aliasse entity, clients, poe, poe_power, poe_usage, rx, tx und speed werden ebenfalls akzeptiert.
 Die Statusauswertung behandelt on, online, connected und up als online; off,
 unavailable, unknown, disconnected und down als offline.
+
+Switches mit mindestens einer group- oder area-Angabe werden im Dashboard unter
+dieser Überschrift zusammengefasst. Über die Pfeil-Schaltfläche im Kopf eines
+Switches lässt sich die Portansicht ein- und ausklappen; beim Einklappen werden
+die Leitungen zu diesem Switch ausgeblendet.
+
+~~~yaml
+switches:
+  - name: Heizungsraum
+    group: Keller
+  - name: Dachboden
+    group: Dachgeschoss
+    collapsed: true
+~~~
 
 Ein Switch-Uplink wird am Switch selbst hinterlegt. local_port ist der Port am
 dargestellten Switch; switch und port bezeichnen den Ziel-Switch und dessen

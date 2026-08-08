@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.3.1";
+const CARD_VERSION = "1.5.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -37,6 +37,7 @@ const STYLE = [
   "@container (max-width:680px){.access-points{grid-template-columns:repeat(auto-fit,minmax(220px,280px))}}",
   "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
   "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
+  ".switch-group{display:grid;gap:10px}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:grid;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
 ].join("");
 
 const EDITOR_STYLE = [
@@ -142,6 +143,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     if (options.portIndex !== undefined) control.dataset.editorPortIndex = String(options.portIndex);
     if (options.bandIndex !== undefined) control.dataset.editorBandIndex = String(options.bandIndex);
     if (options.type === "number") control.dataset.valueType = "number";
+    if (options.valueType) control.dataset.valueType = options.valueType;
     field.append(control);
     return field;
   }
@@ -216,6 +218,8 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "z. B. Access Point" }),
       this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
       this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
+      this._field("RX-Entität", port.rx_entity || port.rx, { kind: "port", switchIndex, portIndex, key: "rx_entity", entity: true, placeholder: "sensor..." }),
+      this._field("TX-Entität", port.tx_entity || port.tx, { kind: "port", switchIndex, portIndex, key: "tx_entity", entity: true, placeholder: "sensor..." }),
       this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
       this._field("PoE-Leistungs-Entität", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
       this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
@@ -232,7 +236,15 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     grid.append(
       this._field("Name", switchConfig.name, { kind: "switch", index, key: "name", placeholder: "z. B. Heizungsraum" }),
       this._field("Modell", switchConfig.model, { kind: "switch", index, key: "model", placeholder: "z. B. USW Lite 8 PoE" }),
-      this._field("Status-Entität", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." })
+      this._field("Status-Entität", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Gruppe / Bereich", switchConfig.group || switchConfig.area, { kind: "switch", index, key: "group", placeholder: "z. B. Dachgeschoss" }),
+      this._field("Startansicht", switchConfig.collapsed ? "true" : "false", { kind: "switch", index, key: "collapsed", valueType: "boolean", options: [["false", "Ausgeklappt"], ["true", "Eingeklappt"]] })
+    );
+    const poeOverview = element("div", "uplink-fields editor-grid");
+    poeOverview.append(
+      this._field("PoE-Budget-Entität", switchConfig.poe_budget_entity, { kind: "switch", index, key: "poe_budget_entity", entity: true, placeholder: "sensor..." }),
+      this._field("PoE-Budget (W)", switchConfig.poe_budget, { kind: "switch", index, key: "poe_budget", type: "number", placeholder: "z. B. 60" }),
+      this._field("PoE-Gesamtverbrauch-Entität", switchConfig.poe_usage_entity || switchConfig.poe_usage, { kind: "switch", index, key: "poe_usage_entity", entity: true, placeholder: "sensor..." })
     );
     const uplink = element("div", "uplink-fields editor-grid");
     uplink.append(
@@ -246,7 +258,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     else portList.append(element("div", "editor-empty", "Noch keine Ports hinzugefügt."));
     const actions = element("div", "editor-item-actions");
     actions.append(this._button("Port hinzufügen", "add-port", { switchIndex: index, kind: "secondary" }));
-    item.append(head, grid, uplink, element("strong", "", "Ports"), portList, actions);
+    item.append(head, grid, element("strong", "", "PoE-Übersicht (optional)"), poeOverview, uplink, element("strong", "", "Ports"), portList, actions);
     return item;
   }
 
@@ -269,7 +281,9 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const target = this._editorTarget(control);
     const key = control.dataset.editorKey;
     if (!target || !key) return;
-    const value = control.dataset.valueType === "number" ? (control.value === "" ? undefined : Number(control.value)) : control.value;
+    let value = control.value;
+    if (control.dataset.valueType === "number") value = control.value === "" ? undefined : Number(control.value);
+    if (control.dataset.valueType === "boolean") value = control.value === "true";
     const [group, property] = key.split(".");
     if (property) {
       if (value === undefined || value === "") {
@@ -426,9 +440,13 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     this._config.switches.forEach((switchConfig) => {
       add(switchConfig.status_entity || switchConfig.entity);
       add(switchConfig.clients_entity || switchConfig.clients);
+      add(switchConfig.poe_budget_entity);
+      add(switchConfig.poe_usage_entity || switchConfig.poe_usage);
       (switchConfig.ports || []).forEach((port) => {
         add(port.status_entity || port.entity);
         add(port.speed_entity || port.speed);
+        add(port.rx_entity || port.rx);
+        add(port.tx_entity || port.tx);
         add(port.poe_entity || port.poe);
         add(port.poe_power_entity || port.poe_power);
       });
@@ -442,6 +460,16 @@ class UbiquitiNetworkDashboard extends HTMLElement {
 
   _state(entityId) {
     return entityId && this._hass && this._hass.states ? this._hass.states[entityId] : undefined;
+  }
+
+  _switchStateKey(switchConfig, index) {
+    return switchConfig.id || switchConfig.name || switchConfig.status_entity || switchConfig.entity || String(index);
+  }
+
+  _isSwitchCollapsed(switchConfig, index) {
+    this._collapsedSwitches = this._collapsedSwitches || new Map();
+    const key = this._switchStateKey(switchConfig, index);
+    return this._collapsedSwitches.has(key) ? this._collapsedSwitches.get(key) : Boolean(switchConfig.collapsed);
   }
 
   _online(entityId) {
@@ -487,6 +515,45 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const numeric = Number.parseFloat(value.replace(",", "."));
     if (!Number.isFinite(numeric)) return value;
     return numeric.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " W";
+  }
+
+  _traffic(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return "";
+    const value = String(state.state);
+    const unit = state.attributes && state.attributes.unit_of_measurement;
+    return unit ? value + " " + unit : value;
+  }
+
+  _watts(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return null;
+    const value = Number.parseFloat(String(state.state).replace(",", "."));
+    if (!Number.isFinite(value)) return null;
+    const unit = String((state.attributes && state.attributes.unit_of_measurement) || "W").toLowerCase();
+    if (unit === "kw") return value * 1000;
+    if (unit === "mw") return value / 1000;
+    return value;
+  }
+
+  _formatWatts(value) {
+    return value.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " W";
+  }
+
+  _switchPoeSummary(switchConfig, ports) {
+    let usage = this._watts(switchConfig.poe_usage_entity || switchConfig.poe_usage);
+    if (usage === null) {
+      const portUsage = ports.map((port) => this._watts(port.poe_power_entity || port.poe_power)).filter((value) => value !== null);
+      usage = portUsage.length ? portUsage.reduce((sum, value) => sum + value, 0) : null;
+    }
+    let budget = this._watts(switchConfig.poe_budget_entity);
+    if (budget === null && switchConfig.poe_budget !== undefined && switchConfig.poe_budget !== "") {
+      const configuredBudget = Number.parseFloat(String(switchConfig.poe_budget).replace(",", "."));
+      budget = Number.isFinite(configuredBudget) ? configuredBudget : null;
+    }
+    if (usage === null && budget === null) return "";
+    if (budget !== null) return "⚡ " + this._formatWatts(usage || 0) + " / " + this._formatWatts(budget);
+    return "⚡ " + this._formatWatts(usage);
   }
 
   _name(entityId, fallback) {
@@ -593,10 +660,14 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     label.append(element("span", "", port.name || this._name(entityId, "Nicht belegt")));
     portButton.append(connector, label);
     const speed = this._speed(port.speed_entity || port.speed);
+    const rx = this._traffic(port.rx_entity || port.rx);
+    const tx = this._traffic(port.tx_entity || port.tx);
     const poePower = this._poePower(port.poe_power_entity || port.poe_power);
-    if (speed || poePower) {
+    if (speed || rx || tx || poePower) {
       const metrics = element("div", "port-metrics");
       if (speed) metrics.append(element("small", "", speed));
+      if (rx) metrics.append(element("small", "", "↓ " + rx));
+      if (tx) metrics.append(element("small", "", "↑ " + tx));
       if (poePower) metrics.append(element("small", "poe-power", "⚡ " + poePower));
       portButton.append(metrics);
     }
@@ -607,7 +678,9 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const entityId = switchConfig.status_entity || switchConfig.entity;
     const health = this._health(entityId);
     const ports = Array.isArray(switchConfig.ports) ? switchConfig.ports : [];
-    const node = element("section", "switch-node " + health.key);
+    const stateKey = this._switchStateKey(switchConfig, index);
+    const collapsed = this._isSwitchCollapsed(switchConfig, index);
+    const node = element("section", "switch-node " + health.key + (collapsed ? " collapsed" : ""));
     const heading = element("div", "switch-heading");
     const title = element("button", "switch-title");
     title.type = "button";
@@ -620,7 +693,25 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const activePorts = ports.filter((port) => this._online(port.status_entity || port.entity) === true).length;
     const summary = element("div", "switch-summary");
     summary.append(this._badge(health), document.createTextNode(activePorts + "/" + ports.length + " aktive Ports"));
-    heading.append(title, summary);
+    const poeSummary = this._switchPoeSummary(switchConfig, ports);
+    if (poeSummary) summary.append(element("span", "poe-summary", poeSummary));
+    const collapse = element("button", "collapse-toggle");
+    collapse.type = "button";
+    collapse.title = collapsed ? "Switch ausklappen" : "Switch einklappen";
+    collapse.setAttribute("aria-expanded", String(!collapsed));
+    collapse.append(icon(collapsed ? "chevron-down" : "chevron-up"));
+    collapse.addEventListener("click", () => {
+      const nextCollapsed = !node.classList.contains("collapsed");
+      node.classList.toggle("collapsed", nextCollapsed);
+      this._collapsedSwitches.set(stateKey, nextCollapsed);
+      collapse.title = nextCollapsed ? "Switch ausklappen" : "Switch einklappen";
+      collapse.setAttribute("aria-expanded", String(!nextCollapsed));
+      collapse.replaceChildren(icon(nextCollapsed ? "chevron-down" : "chevron-up"));
+      requestAnimationFrame(() => this._drawWires());
+    });
+    const headingActions = element("div", "switch-heading-actions");
+    headingActions.append(summary, collapse);
+    heading.append(title, headingActions);
 
     const face = element("div", "switch-face");
     const brand = element("div", "switch-brand");
@@ -680,7 +771,26 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       }
       if (switches.length) {
         const switchSection = element("section", "switches");
-        switches.forEach((switchConfig, index) => switchSection.append(this._switch(switchConfig, index)));
+        const hasGroups = switches.some((switchConfig) => switchConfig.group || switchConfig.area);
+        if (!hasGroups) {
+          switches.forEach((switchConfig, index) => switchSection.append(this._switch(switchConfig, index)));
+        } else {
+          const groups = new Map();
+          switches.forEach((switchConfig, index) => {
+            const groupName = String(switchConfig.group || switchConfig.area || "Weitere Geräte");
+            if (!groups.has(groupName)) groups.set(groupName, []);
+            groups.get(groupName).push([switchConfig, index]);
+          });
+          groups.forEach((groupSwitches, groupName) => {
+            const group = element("section", "switch-group");
+            const groupHeading = element("div", "switch-group-heading");
+            groupHeading.append(icon("folder-network"), document.createTextNode(groupName));
+            const nodes = element("div", "switch-group-nodes");
+            groupSwitches.forEach(([switchConfig, index]) => nodes.append(this._switch(switchConfig, index)));
+            group.append(groupHeading, nodes);
+            switchSection.append(group);
+          });
+        }
         topology.append(switchSection);
       }
       card.append(topology);
@@ -709,6 +819,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     this.querySelectorAll("[data-wire-from]").forEach((from) => {
       const to = this.querySelector("[data-wire-to='" + from.dataset.wireFrom + "']");
       if (!to) return;
+      if (from.closest(".switch-node.collapsed") || to.closest(".switch-node.collapsed")) return;
       const start = from.getBoundingClientRect();
       const end = to.getBoundingClientRect();
       const x1 = start.left - bounds.left + start.width / 2;
@@ -716,7 +827,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const x2 = end.left - bounds.left + end.width / 2;
       const y2 = end.top - bounds.top + end.height / 2;
       const targetNode = to.closest(".ap-device, .switch-node");
-      const intermediateNodes = [...this.querySelectorAll(".ap-device, .switch-node")].filter((node) => {
+      const intermediateNodes = [...this.querySelectorAll(".ap-device, .switch-node:not(.collapsed)")].filter((node) => {
         if (node === targetNode) return false;
         const rect = node.getBoundingClientRect();
         const top = rect.top - bounds.top;

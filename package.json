@@ -1,6 +1,6 @@
 {
   "name": "ha-ubiquiti-dashboard",
-  "version": "1.3.1",
+  "version": "1.5.0",
   "private": true,
   "description": "A visual Home Assistant Lovelace card for UniFi access points and switches.",
   "scripts": {
