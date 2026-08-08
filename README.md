@@ -16,6 +16,9 @@ Netzwerktopologie dar.
   Band-Metriken
 - Switches als Geräteansicht mit konfigurierten Ports, Link-Status, PoE und
   optionaler Geschwindigkeit
+- Optionaler Internet-Gateway-Knoten (Router/USG/UDM) mit WAN-Status,
+  Download-/Upload-Durchsatz, Latenz und WAN-IP, an den Switches per Uplink
+  andocken können
 - Farbige Uplink-Linien zwischen AP und Switch-Port
 - Responsive Darstellung, Home-Assistant-Theme-Variablen und keine externen
   Abhängigkeiten
@@ -85,9 +88,13 @@ switches:
   - name: USW Wohnzimmer
     model: USW Lite 8 PoE
     status_entity: binary_sensor.usw_wohnzimmer_status
+    uplink:
+      switch: Internet-Gateway
+      port: 1
+      local_port: 1
     ports:
       - number: 1
-        name: Home Assistant
+        name: Internet-Gateway
         status_entity: binary_sensor.usw_wohnzimmer_port_1
         speed_entity: sensor.usw_wohnzimmer_port_1_speed
       - number: 6
@@ -98,6 +105,17 @@ switches:
         name: Wohnzimmer AP
         status_entity: binary_sensor.usw_wohnzimmer_port_8
         poe_entity: binary_sensor.usw_wohnzimmer_port_8_poe
+gateway:
+  name: Internet-Gateway
+  model: UDM Pro
+  status_entity: binary_sensor.udm_wan_status
+  wan_ip_entity: sensor.udm_wan_ip
+  download_entity: sensor.udm_wan_download
+  upload_entity: sensor.udm_wan_upload
+  latency_entity: sensor.udm_wan_latency
+  ports:
+    - number: 1
+      name: USW Wohnzimmer
 ~~~
 
 ## Konfigurationsreferenz
@@ -119,7 +137,15 @@ switches:
 | poe_budget_entity / poe_budget | Entity-ID / Zahl | Optionales PoE-Watt-Budget eines Switches |
 | poe_usage_entity | Entity-ID | Optionaler Gesamtverbrauch; sonst werden die PoE-Portwerte summiert |
 | uplink.switch / uplink.port | Text / Zahl | Verknüpft einen AP mit einem Switch-Port |
-| uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch-Verbindung |
+| uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch- oder Switch-zu-Gateway-Verbindung |
+| gateway | Objekt | Optionaler Internet-Gateway-Knoten unterhalb der Switches |
+| gateway.name / gateway.model | Text | Name und Modell des Gateways, z. B. UDM Pro |
+| gateway.status_entity | Entity-ID | Online-Status der Internetverbindung (WAN) |
+| gateway.wan_ip_entity | Entity-ID | Optionale öffentliche WAN-IP als Text |
+| gateway.download_entity / gateway.upload_entity | Entity-ID | Optionaler aktueller Internet-Durchsatz |
+| gateway.latency_entity | Entity-ID | Optionale WAN-Latenz, etwa 12 ms |
+| gateway.clients_entity | Entity-ID | Optionale Gesamt-Client-Anzahl |
+| gateway.ports | Liste | Optionale LAN-Ports des Gateways, gleiches Schema wie Switch-Ports |
 
 Die kürzeren Aliasse entity, clients, poe, poe_power, poe_usage, rx, tx und speed werden ebenfalls akzeptiert.
 Die Statusauswertung behandelt on, online, connected und up als online; off,
@@ -149,6 +175,26 @@ switches:
     uplink:
       switch: Heizungsraum
       port: 3
+      local_port: 1
+~~~
+
+Ein optionaler gateway-Knoten stellt den Internet-Einstiegspunkt (Router,
+USG oder UDM) unterhalb der Switches dar. Switches verknüpfen sich mit ihm
+genau wie mit einem anderen Switch: switch bezieht sich dabei auf den Namen
+des Gateways.
+
+~~~yaml
+gateway:
+  name: Internet-Gateway
+  status_entity: binary_sensor.udm_wan_status
+  ports:
+    - number: 1
+      name: Heizungsraum
+switches:
+  - name: Heizungsraum
+    uplink:
+      switch: Internet-Gateway
+      port: 1
       local_port: 1
 ~~~
 

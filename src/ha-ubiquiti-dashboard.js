@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.6.0";
+const CARD_VERSION = "1.7.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -38,6 +38,8 @@ const STYLE = [
   "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
   "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
   ".switch-group{display:grid;gap:10px}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:grid;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
+  ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
+  ".header-gateway-chip.online{color:var(--net-green)}.header-gateway-chip.offline{color:var(--net-red)}.header-gateway-chip.unknown{color:var(--net-amber)}.header-gateway-chip ha-icon{color:inherit}",
 ].join("");
 
 const EDITOR_STYLE = [
@@ -110,6 +112,11 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       option.value = switchConfig.name;
       list.append(option);
     });
+    if (this._config.gateway && this._config.gateway.name) {
+      const option = document.createElement("option");
+      option.value = this._config.gateway.name;
+      list.append(option);
+    }
     return list;
   }
 
@@ -262,6 +269,51 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     return item;
   }
 
+  _gatewayPortEditor(port, portIndex) {
+    const item = element("article", "editor-item");
+    const head = element("div", "editor-item-head");
+    head.append(element("strong", "", "Port " + (port.number || portIndex + 1)), this._button("Entfernen", "remove-gateway-port", { portIndex, kind: "danger" }));
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Portnummer", port.number, { kind: "gateway-port", portIndex, key: "number", type: "number" }),
+      this._field("Name", port.name, { kind: "gateway-port", portIndex, key: "name", placeholder: "z. B. Core Switch" }),
+      this._field("Status-Entität", port.status_entity || port.entity, { kind: "gateway-port", portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+      this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "gateway-port", portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." })
+    );
+    item.append(head, grid);
+    return item;
+  }
+
+  _gatewayEditor() {
+    const gateway = this._config.gateway;
+    const section = this._section("Internet-Gateway", "Optionale WAN-Ansicht unterhalb der Switches. Switches können ihren Uplink auf den Gateway-Namen setzen.");
+    if (!gateway) {
+      const actions = element("div", "editor-item-actions");
+      actions.append(this._button("Gateway hinzufügen", "add-gateway"));
+      section.append(element("div", "editor-empty", "Kein Gateway konfiguriert."), actions);
+      return section;
+    }
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Name", gateway.name, { kind: "gateway", key: "name", placeholder: "z. B. Internet-Gateway" }),
+      this._field("Modell", gateway.model, { kind: "gateway", key: "model", placeholder: "z. B. UDM Pro" }),
+      this._field("Status-Entität", gateway.status_entity || gateway.entity, { kind: "gateway", key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("WAN-IP-Entität", gateway.wan_ip_entity, { kind: "gateway", key: "wan_ip_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Download-Entität", gateway.download_entity || gateway.download, { kind: "gateway", key: "download_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Upload-Entität", gateway.upload_entity || gateway.upload, { kind: "gateway", key: "upload_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Latenz-Entität", gateway.latency_entity || gateway.latency, { kind: "gateway", key: "latency_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Clients-Entität", gateway.clients_entity || gateway.clients, { kind: "gateway", key: "clients_entity", entity: true, placeholder: "sensor..." })
+    );
+    const ports = Array.isArray(gateway.ports) ? gateway.ports : [];
+    const portList = element("div", "editor-list");
+    if (ports.length) ports.forEach((port, portIndex) => portList.append(this._gatewayPortEditor(port, portIndex)));
+    else portList.append(element("div", "editor-empty", "Noch keine LAN-Ports hinzugefügt."));
+    const actions = element("div", "editor-item-actions");
+    actions.append(this._button("LAN-Port hinzufügen", "add-gateway-port", { kind: "secondary" }), this._button("Gateway entfernen", "remove-gateway", { kind: "danger" }));
+    section.append(grid, element("strong", "", "LAN-Ports (optional, für Switch-Uplinks)"), portList, actions);
+    return section;
+  }
+
   _editorTarget(control) {
     const kind = control.dataset.editorKind;
     if (kind === "ap") return this._config.access_points[Number(control.dataset.editorIndex)];
@@ -273,6 +325,10 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     if (kind === "port") {
       const switchConfig = this._config.switches[Number(control.dataset.editorSwitchIndex)];
       return switchConfig && switchConfig.ports && switchConfig.ports[Number(control.dataset.editorPortIndex)];
+    }
+    if (kind === "gateway") return this._config.gateway;
+    if (kind === "gateway-port") {
+      return this._config.gateway && this._config.gateway.ports && this._config.gateway.ports[Number(control.dataset.editorPortIndex)];
     }
     return this._config;
   }
@@ -431,6 +487,24 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       this._config.switches[switchIndex].ports.splice(portIndex, 1);
       configChanged = true;
     }
+    if (action === "add-gateway") {
+      this._config.gateway = { name: "Internet-Gateway" };
+      configChanged = true;
+    }
+    if (action === "remove-gateway") {
+      delete this._config.gateway;
+      configChanged = true;
+    }
+    if (action === "add-gateway-port") {
+      const ports = this._config.gateway.ports || (this._config.gateway.ports = []);
+      const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
+      ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      configChanged = true;
+    }
+    if (action === "remove-gateway-port") {
+      this._config.gateway.ports.splice(portIndex, 1);
+      configChanged = true;
+    }
     if (configChanged) this._emitConfigChanged();
     this._render();
   }
@@ -485,7 +559,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const switchActions = element("div", "editor-item-actions");
     switchActions.append(this._button("Switch hinzufügen", "add-switch"));
     switches.append(switchList, switchActions);
-    editor.append(header, general, discovery, aps, switches, this._entityList(), this._switchList());
+    editor.append(header, general, discovery, aps, switches, this._gatewayEditor(), this._entityList(), this._switchList());
     this._root.append(editor);
     if (this._listenersAttached) return;
     this._listenersAttached = true;
@@ -513,6 +587,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (!config || typeof config !== "object") throw new Error("Eine Kartenkonfiguration wird benötigt.");
     if (config.access_points && !Array.isArray(config.access_points)) throw new Error("access_points muss eine Liste sein.");
     if (config.switches && !Array.isArray(config.switches)) throw new Error("switches muss eine Liste sein.");
+    if (config.gateway && typeof config.gateway !== "object") throw new Error("gateway muss ein Objekt sein.");
     this._config = Object.assign({ title: "UniFi Network", theme: "auto", access_points: [], switches: [] }, clone(config));
     this._config.access_points = Array.isArray(this._config.access_points) ? this._config.access_points : [];
     this._config.switches = Array.isArray(this._config.switches) ? this._config.switches : [];
@@ -545,7 +620,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   getCardSize() {
     const apCount = this._config && this._config.access_points ? this._config.access_points.length : 0;
     const switchCount = this._config && this._config.switches ? this._config.switches.length : 0;
-    return Math.max(4, Math.ceil((apCount * 2 + switchCount * 3) / 2));
+    const gatewayBonus = this._config && this._config.gateway ? 2 : 0;
+    return Math.max(4, Math.ceil((apCount * 2 + switchCount * 3) / 2) + gatewayBonus);
   }
 
   getGridOptions() {
@@ -577,6 +653,19 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         add(port.poe_power_entity || port.poe_power);
       });
     });
+    if (this._config.gateway) {
+      const gateway = this._config.gateway;
+      add(gateway.status_entity || gateway.entity);
+      add(gateway.wan_ip_entity);
+      add(gateway.download_entity || gateway.download);
+      add(gateway.upload_entity || gateway.upload);
+      add(gateway.latency_entity || gateway.latency);
+      add(gateway.clients_entity || gateway.clients);
+      (gateway.ports || []).forEach((port) => {
+        add(port.status_entity || port.entity);
+        add(port.speed_entity || port.speed);
+      });
+    }
     return [...entityIds].map((entityId) => {
       const state = hass.states[entityId];
       const attributes = state && state.attributes ? state.attributes : {};
@@ -649,6 +738,14 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const value = String(state.state);
     const unit = state.attributes && state.attributes.unit_of_measurement;
     return unit ? value + " " + unit : value;
+  }
+
+  _latency(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return "";
+    const value = String(state.state);
+    const unit = state.attributes && state.attributes.unit_of_measurement;
+    return value + " " + (unit || "ms");
   }
 
   _watts(entityId) {
@@ -853,6 +950,66 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return node;
   }
 
+  _gatewayPortsSection(gateway) {
+    const ports = Array.isArray(gateway.ports) ? gateway.ports : [];
+    if (!ports.length) return null;
+    const portsNode = element("div", "ports");
+    ports.forEach((port, portIndex) => portsNode.append(this._port(port, gateway, "gateway", portIndex)));
+    return portsNode;
+  }
+
+  _gateway() {
+    const gateway = this._config.gateway;
+    if (!gateway) return null;
+    const entityId = gateway.status_entity || gateway.entity;
+    const health = this._health(entityId);
+    const node = element("section", "switch-node gateway-node " + health.key);
+    const heading = element("div", "switch-heading");
+    const title = element("button", "switch-title");
+    title.type = "button";
+    this._clickable(title, entityId);
+    const gatewayIcon = element("span", "switch-icon");
+    gatewayIcon.append(icon("web"));
+    const titleText = element("span");
+    titleText.append(element("strong", "", gateway.name || this._name(entityId, "Internet-Gateway")), element("small", "", gateway.model || "Gateway"));
+    title.append(gatewayIcon, titleText);
+    const summary = element("div", "switch-summary");
+    summary.append(this._badge(health));
+    const wanIp = this._value(gateway.wan_ip_entity, "");
+    if (wanIp) summary.append(element("span", "", wanIp));
+    const latency = this._latency(gateway.latency_entity || gateway.latency);
+    if (latency) summary.append(element("span", "", "↝ " + latency));
+    const headingActions = element("div", "switch-heading-actions");
+    headingActions.append(summary);
+    heading.append(title, headingActions);
+
+    const face = element("div", "switch-face gateway-face");
+    const brand = element("div", "switch-brand gateway-brand");
+    brand.append(icon("earth"));
+    face.append(brand);
+
+    const download = this._traffic(gateway.download_entity || gateway.download);
+    const upload = this._traffic(gateway.upload_entity || gateway.upload);
+    const clients = this._value(gateway.clients_entity || gateway.clients, "");
+    if (download || upload || clients) {
+      const metrics = element("div", "gateway-metrics");
+      if (download) metrics.append(element("span", "", "↓ " + download));
+      if (upload) metrics.append(element("span", "", "↑ " + upload));
+      if (clients) {
+        const clientMetric = element("span");
+        clientMetric.append(icon("account-group"), document.createTextNode(clients));
+        metrics.append(clientMetric);
+      }
+      face.append(metrics);
+    }
+
+    const portsNode = this._gatewayPortsSection(gateway);
+    if (portsNode) face.append(portsNode);
+
+    node.append(heading, face);
+    return node;
+  }
+
   _render() {
     if (!this.isConnected || !this._config) return;
     this.replaceChildren();
@@ -874,10 +1031,17 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       chip.append(icon(stat[0]), document.createTextNode(stat[1]));
       stats.append(chip);
     });
+    if (this._config.gateway) {
+      const gatewayHealth = this._health(this._config.gateway.status_entity || this._config.gateway.entity);
+      const label = gatewayHealth.key === "online" ? "Online" : gatewayHealth.key === "offline" ? "Offline" : "Unbekannt";
+      const chip = element("span", "header-gateway-chip " + gatewayHealth.key);
+      chip.append(icon("web"), document.createTextNode("Internet " + label));
+      stats.append(chip);
+    }
     header.append(heading, stats);
     card.append(header);
 
-    if (!accessPoints.length && !switches.length) {
+    if (!accessPoints.length && !switches.length && !this._config.gateway) {
       const empty = element("div", "empty-state");
       const emptyIcon = element("div", "empty-icon");
       emptyIcon.append(icon("switch"));
@@ -919,6 +1083,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         }
         topology.append(switchSection);
       }
+      const gatewayNode = this._gateway();
+      if (gatewayNode) topology.append(gatewayNode);
       card.append(topology);
     }
     const footer = element("footer");

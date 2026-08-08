@@ -41,7 +41,13 @@
           "switch.heating_port_5": { state: "on", attributes: {} },
           "switch.heating_port_6": { state: "on", attributes: {} },
           "switch.heating_port_7": { state: "on", attributes: {} },
-          "switch.heating_port_8": { state: "on", attributes: {} }
+          "switch.heating_port_8": { state: "on", attributes: {} },
+          "binary_sensor.udm_wan_status": { state: "on", attributes: {} },
+          "sensor.udm_wan_ip": { state: "203.0.113.42", attributes: {} },
+          "sensor.udm_wan_download": { state: "412", attributes: { unit_of_measurement: "Mbit/s" } },
+          "sensor.udm_wan_upload": { state: "89", attributes: { unit_of_measurement: "Mbit/s" } },
+          "sensor.udm_wan_latency": { state: "11", attributes: { unit_of_measurement: "ms" } },
+          "switch.udm_port_1": { state: "on", attributes: {} }
         }
       };
       card.setConfig({
@@ -66,6 +72,7 @@
           {
             name: "Heizungsraum",
             status_entity: "sensor.heating_state",
+            uplink: { switch: "Internet-Gateway", port: 1, local_port: 8 },
             ports: [
               { number: 1, name: "SONOFF CAM-B1P", status_entity: "switch.heating_port_1" },
               { number: 2, name: "Dachboden AP", status_entity: "switch.heating_port_2" },
@@ -74,10 +81,22 @@
               { number: 5, name: "Gäste-Switch", status_entity: "switch.heating_port_5" },
               { number: 6, name: "SONOFF", status_entity: "switch.heating_port_6" },
               { number: 7, name: "Obergeschoss AP", status_entity: "switch.heating_port_7" },
-              { number: 8, name: "Tony's Switch", status_entity: "switch.heating_port_8" }
+              { number: 8, name: "Internet-Gateway Uplink", status_entity: "switch.heating_port_8" }
             ]
           }
-        ]
+        ],
+        gateway: {
+          name: "Internet-Gateway",
+          model: "UDM Pro",
+          status_entity: "binary_sensor.udm_wan_status",
+          wan_ip_entity: "sensor.udm_wan_ip",
+          download_entity: "sensor.udm_wan_download",
+          upload_entity: "sensor.udm_wan_upload",
+          latency_entity: "sensor.udm_wan_latency",
+          ports: [
+            { number: 1, name: "Heizungsraum", status_entity: "switch.udm_port_1" }
+          ]
+        }
       });
     </script>
   </body>
