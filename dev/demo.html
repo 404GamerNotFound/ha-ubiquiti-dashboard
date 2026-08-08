@@ -19,42 +19,61 @@
       const card = document.querySelector("ha-ubiquiti-dashboard");
       card.hass = {
         states: {
-          "binary_sensor.wz_ap": { state: "on", attributes: { friendly_name: "Wohnzimmer AP" } },
-          "sensor.wz_clients": { state: "12", attributes: {} },
-          "sensor.wz_band_24": { state: "3", attributes: {} },
-          "sensor.wz_band_5": { state: "9", attributes: {} },
-          "binary_sensor.office_ap": { state: "on", attributes: { friendly_name: "Büro AP" } },
-          "sensor.office_clients": { state: "8", attributes: {} },
-          "binary_sensor.garden_ap": { state: "off", attributes: { friendly_name: "Garten AP" } },
-          "sensor.garden_clients": { state: "0", attributes: {} },
-          "binary_sensor.usw_living": { state: "on", attributes: {} },
-          "binary_sensor.port_1": { state: "on", attributes: {} },
-          "sensor.port_1_speed": { state: "1 Gbit/s", attributes: {} },
-          "binary_sensor.port_6": { state: "on", attributes: {} },
-          "binary_sensor.port_6_poe": { state: "on", attributes: {} },
-          "binary_sensor.port_8": { state: "on", attributes: {} },
-          "binary_sensor.port_8_poe": { state: "on", attributes: {} },
-          "binary_sensor.port_7": { state: "off", attributes: {} }
+          "sensor.dachboden_state": { state: "online", attributes: {} },
+          "sensor.dachboden_clients": { state: "4", attributes: {} },
+          "switch.dachboden_port_1": { state: "on", attributes: {} },
+          "switch.dachboden_port_2": { state: "on", attributes: {} },
+          "switch.dachboden_port_3": { state: "on", attributes: {} },
+          "switch.dachboden_port_4": { state: "on", attributes: {} },
+          "switch.dachboden_port_5": { state: "on", attributes: {} },
+          "sensor.dachboden_port_1_speed": { state: "1000", attributes: {} },
+          "sensor.dachboden_port_2_speed": { state: "1000", attributes: {} },
+          "sensor.dachboden_port_3_speed": { state: "1000", attributes: {} },
+          "sensor.dachboden_port_4_speed": { state: "1000", attributes: {} },
+          "sensor.dachboden_port_5_speed": { state: "1000", attributes: {} },
+          "sensor.heating_state": { state: "online", attributes: {} },
+          "switch.heating_port_1": { state: "on", attributes: {} },
+          "switch.heating_port_2": { state: "on", attributes: {} },
+          "switch.heating_port_3": { state: "on", attributes: {} },
+          "switch.heating_port_4": { state: "on", attributes: {} },
+          "switch.heating_port_5": { state: "on", attributes: {} },
+          "switch.heating_port_6": { state: "on", attributes: {} },
+          "switch.heating_port_7": { state: "on", attributes: {} },
+          "switch.heating_port_8": { state: "on", attributes: {} }
         }
       };
       card.setConfig({
-        title: "Mein Zuhause",
+        title: "UniFi Network",
         access_points: [
-          { name: "Wohnzimmer AP", model: "U6+", status_entity: "binary_sensor.wz_ap", clients_entity: "sensor.wz_clients", bands: [{ label: "2,4 GHz", entity: "sensor.wz_band_24" }, { label: "5 GHz", entity: "sensor.wz_band_5" }], uplink: { switch: "USW Wohnzimmer", port: 8 } },
-          { name: "Büro AP", model: "U6 Pro", status_entity: "binary_sensor.office_ap", clients_entity: "sensor.office_clients", uplink: { switch: "USW Wohnzimmer", port: 6 } },
-          { name: "Garten AP", model: "AC Mesh", status_entity: "binary_sensor.garden_ap", clients_entity: "sensor.garden_clients" }
+          { name: "Dachboden AP", status_entity: "sensor.dachboden_state", clients_entity: "sensor.dachboden_clients", uplink: { switch: "Heizungsraum", port: 2 } }
         ],
-        switches: [{
-          name: "USW Wohnzimmer",
-          model: "USW Lite 8 PoE",
-          status_entity: "binary_sensor.usw_living",
-          ports: [
-            { number: 1, name: "Home Assistant", status_entity: "binary_sensor.port_1", speed_entity: "sensor.port_1_speed" },
-            { number: 6, name: "Büro AP", status_entity: "binary_sensor.port_6", poe_entity: "binary_sensor.port_6_poe" },
-            { number: 7, name: "NAS", status_entity: "binary_sensor.port_7" },
-            { number: 8, name: "Wohnzimmer AP", status_entity: "binary_sensor.port_8", poe_entity: "binary_sensor.port_8_poe" }
-          ]
-        }]
+        switches: [
+          {
+            name: "Dachboden",
+            status_entity: "sensor.dachboden_state",
+            ports: [
+              { number: 1, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_1", speed_entity: "sensor.dachboden_port_1_speed" },
+              { number: 2, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_2", speed_entity: "sensor.dachboden_port_2_speed" },
+              { number: 3, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_3", speed_entity: "sensor.dachboden_port_3_speed" },
+              { number: 4, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_4", speed_entity: "sensor.dachboden_port_4_speed" },
+              { number: 5, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_5", speed_entity: "sensor.dachboden_port_5_speed" }
+            ]
+          },
+          {
+            name: "Heizungsraum",
+            status_entity: "sensor.heating_state",
+            ports: [
+              { number: 1, name: "SONOFF CAM-B1P", status_entity: "switch.heating_port_1" },
+              { number: 2, name: "Dachboden AP", status_entity: "switch.heating_port_2" },
+              { number: 3, name: "Dachboden Switch", status_entity: "switch.heating_port_3" },
+              { number: 4, name: "Reolink Kamera", status_entity: "switch.heating_port_4" },
+              { number: 5, name: "Gäste-Switch", status_entity: "switch.heating_port_5" },
+              { number: 6, name: "SONOFF", status_entity: "switch.heating_port_6" },
+              { number: 7, name: "Obergeschoss AP", status_entity: "switch.heating_port_7" },
+              { number: 8, name: "Tony's Switch", status_entity: "switch.heating_port_8" }
+            ]
+          }
+        ]
       });
     </script>
   </body>
