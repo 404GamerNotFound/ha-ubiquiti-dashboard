@@ -15,7 +15,7 @@
       customElements.define("ha-icon", class extends HTMLElement {
         connectedCallback() { this.textContent = "◈"; }
       });
-      import "../src/ha-ubiquiti-dashboard.js";
+      await import("../src/ha-ubiquiti-dashboard.js?v=" + Date.now());
       const card = document.querySelector("ha-ubiquiti-dashboard");
       card.hass = {
         states: {

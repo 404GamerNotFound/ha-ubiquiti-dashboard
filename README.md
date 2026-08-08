@@ -19,7 +19,11 @@ Netzwerktopologie dar.
 - Optionaler Internet-Gateway-Knoten (Router/USG/UDM) mit WAN-Status,
   Download-/Upload-Durchsatz, Latenz und WAN-IP, an den Switches per Uplink
   andocken können
-- Farbige Uplink-Linien zwischen AP und Switch-Port
+- Farbige Uplink-Linien zwischen AP und Switch-Port, die bei konfigurierten
+  Geschwindigkeits- und Durchsatz-Entitäten automatisch als Auslastungs-Ampel
+  (grün/gelb/rot) eingefärbt werden
+- Sammel-Warnhinweis im Kartenkopf, sobald ein AP, Switch oder Gateway offline
+  ist
 - Responsive Darstellung, Home-Assistant-Theme-Variablen und keine externen
   Abhängigkeiten
 - Nativer Lovelace-UI-Editor für Titel, APs, Switches, Ports und Uplinks
@@ -149,7 +153,19 @@ gateway:
 
 Die kürzeren Aliasse entity, clients, poe, poe_power, poe_usage, rx, tx und speed werden ebenfalls akzeptiert.
 Die Statusauswertung behandelt on, online, connected und up als online; off,
-unavailable, unknown, disconnected und down als offline.
+unavailable, unknown, disconnected und down als offline. Sobald mindestens ein
+AP, Switch oder das Gateway offline ist, erscheint im Kartenkopf ein
+zusammenfassender Warnhinweis ("N Geräte offline").
+
+Sind für den Ziel-Port eines Uplinks sowohl speed_entity als auch mindestens
+eine der Entitäten rx_entity oder tx_entity konfiguriert, färbt sich die
+Uplink-Leitung automatisch nach Auslastung ein: grün unter 60 %, gelb ab 60 %
+und rot ab 85 % der Portgeschwindigkeit. Bei Switch-zu-Switch- oder
+Switch-zu-Gateway-Uplinks wird zunächst der Ziel-Port ausgewertet; fehlen dort
+Werte, zählt ersatzweise der eigene local_port. Ohne passende Entitäten bleibt
+es bei der festen Farbzuordnung zur Unterscheidung mehrerer Uplinks. rx_entity
+und tx_entity werden dabei anhand ihrer unit_of_measurement (Mbit/s, Gbit/s,
+Kbit/s, MB/s, KB/s oder Byte/s) automatisch in Mbit/s umgerechnet.
 
 Switches mit mindestens einer group- oder area-Angabe werden im Dashboard unter
 dieser Überschrift zusammengefasst. Über die Pfeil-Schaltfläche im Kopf eines

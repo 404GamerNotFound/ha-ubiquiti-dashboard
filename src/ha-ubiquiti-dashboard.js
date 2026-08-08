@@ -5,10 +5,11 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.7.0";
+const CARD_VERSION = "1.8.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
+const WIRE_COLOR_KEYS = [...LINK_COLORS, "red"];
 
 const STYLE = [
   ":host{display:block}",
@@ -22,14 +23,14 @@ const STYLE = [
   ".header-stats span{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid var(--net-border);border-radius:999px;background:rgba(10,37,51,.3)}",
   "ha-icon{--mdc-icon-size:18px;width:18px;height:18px;color:var(--net-cyan)} .header-stats ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".topology{position:relative;isolation:isolate;container-type:inline-size;padding:20px 20px 14px;min-height:300px}.wires{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:visible}",
-  ".wire{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.82;filter:drop-shadow(0 0 4px currentColor)}.wire.cyan{stroke:var(--net-cyan);color:var(--net-cyan)}.wire.violet{stroke:var(--net-violet);color:var(--net-violet)}.wire.green{stroke:var(--net-green);color:var(--net-green)}.wire.amber{stroke:var(--net-amber);color:var(--net-amber)}.wire.blue{stroke:#6db7ff;color:#6db7ff}.wire.pink{stroke:#ff79c5;color:#ff79c5}",
+  ".wire{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.82;filter:drop-shadow(0 0 4px currentColor)}.wire.cyan{stroke:var(--net-cyan);color:var(--net-cyan)}.wire.violet{stroke:var(--net-violet);color:var(--net-violet)}.wire.green{stroke:var(--net-green);color:var(--net-green)}.wire.amber{stroke:var(--net-amber);color:var(--net-amber)}.wire.blue{stroke:#6db7ff;color:#6db7ff}.wire.pink{stroke:#ff79c5;color:#ff79c5}.wire.red{stroke:var(--net-red);color:var(--net-red)}",
   ".access-points{position:relative;z-index:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,320px));justify-content:center;gap:14px;align-items:start}.access-points.access-points-dense{grid-template-columns:repeat(auto-fit,minmax(210px,280px))}",
   "button{font:inherit}.device{position:relative;display:flex;flex-direction:column;align-items:center;height:264px;padding:13px;border:1px solid var(--net-border);border-radius:16px;background:linear-gradient(150deg,rgba(17,48,64,.86),rgba(7,20,30,.9));color:var(--net-text);text-align:center;cursor:pointer;transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.theme-light .device{background:linear-gradient(150deg,#fff,#edf8fb)}.device:hover,.switch-title:hover,.port:hover{border-color:var(--net-cyan);transform:translateY(-2px);box-shadow:0 8px 22px rgba(18,193,239,.12)}.device:focus-visible,.switch-title:focus-visible,.port:focus-visible{outline:2px solid var(--net-cyan);outline-offset:2px}",
   ".device-topline{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;color:var(--net-muted);font-size:.66rem}.device-kind{display:inline-flex;align-items:center;gap:4px}.device-kind ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".state-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,.07);font-size:.65rem;font-weight:700;white-space:nowrap}.state-pill i,.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--net-muted)}.state-pill.online i,.legend .online{background:var(--net-green);box-shadow:0 0 7px var(--net-green)}.state-pill.offline i,.legend .offline{background:var(--net-red)}.state-pill.unknown i,.legend .unknown{background:var(--net-amber)}",
   ".ap-disc{position:relative;display:grid;place-items:center;width:78px;height:78px;margin:12px 0 9px;border:5px solid #eaf7fa;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cfe2e7);box-shadow:0 0 0 2px rgba(77,227,155,.45),0 0 22px rgba(38,213,251,.36)}.ap-disc.offline{box-shadow:0 0 0 2px rgba(255,113,132,.5),0 0 20px rgba(255,113,132,.2)}.ap-disc.unknown{box-shadow:0 0 0 2px rgba(255,201,88,.5),0 0 20px rgba(255,201,88,.2)}.ap-disc span{color:#254555;font-size:1.8rem;font-weight:300}.ap-disc i{position:absolute;right:7px;bottom:8px;width:10px;height:10px;border:2px solid #efffff;border-radius:50%;background:var(--net-green)}.ap-disc.offline i{background:var(--net-red)}.ap-disc.unknown i{background:var(--net-amber)}",
   ".device-name{max-width:100%;overflow:hidden;color:var(--net-text);font-size:.96rem;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.model{margin-top:3px;color:var(--net-muted);font-size:.72rem}.client-count{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--net-muted);font-size:.72rem}.client-count ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.client-count strong{color:var(--net-text);font-size:.9rem}.band-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:7px;color:var(--net-muted);font-size:.68rem}.band-metrics strong{color:var(--net-green)}",
-  ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}",
+  ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}.wire-dot.red{background:var(--net-red);color:var(--net-red)}",
   ".switches{position:relative;z-index:1;display:grid;gap:16px;margin-top:46px}.switch-node{border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
   ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;min-height:.78rem}.port small{color:#66818a;font-size:.62rem}.port small.poe-power{color:#946e20;font-weight:750}",
   ".empty-ports{grid-column:1/-1;padding:15px;color:#5e7780;text-align:center;font-size:.78rem}.empty-state{display:flex;align-items:center;gap:16px;margin:20px;padding:28px;border:1px dashed var(--net-border);border-radius:16px;color:var(--net-muted)}.empty-state h2{margin:0 0 5px;color:var(--net-text);font-size:1rem}.empty-state p{max-width:480px;margin:0;font-size:.82rem;line-height:1.5}.empty-icon{display:grid;place-items:center;flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:rgba(38,213,251,.13)}.empty-icon ha-icon{width:25px;height:25px}",
@@ -40,6 +41,7 @@ const STYLE = [
   ".switch-group{display:grid;gap:10px}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:grid;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
   ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".header-gateway-chip.online{color:var(--net-green)}.header-gateway-chip.offline{color:var(--net-red)}.header-gateway-chip.unknown{color:var(--net-amber)}.header-gateway-chip ha-icon{color:inherit}",
+  ".header-stats span.header-alert-chip{color:var(--net-red);border-color:rgba(255,113,132,.5);background:rgba(255,113,132,.14);font-weight:700}.header-alert-chip ha-icon{color:var(--net-red)}",
 ].join("");
 
 const EDITOR_STYLE = [
@@ -740,6 +742,54 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return unit ? value + " " + unit : value;
   }
 
+  _speedMbps(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return null;
+    const numeric = Number.parseFloat(String(state.state).replace(",", "."));
+    if (!Number.isFinite(numeric) || numeric <= 0) return null;
+    const unit = String((state.attributes && state.attributes.unit_of_measurement) || "").toLowerCase();
+    if (unit.includes("gbit")) return numeric * 1000;
+    if (unit.includes("kbit")) return numeric / 1000;
+    return numeric;
+  }
+
+  _trafficMbps(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return null;
+    const numeric = Number.parseFloat(String(state.state).replace(",", "."));
+    if (!Number.isFinite(numeric)) return null;
+    const unit = String((state.attributes && state.attributes.unit_of_measurement) || "").toLowerCase();
+    if (unit.includes("gbit")) return numeric * 1000;
+    if (unit.includes("kbit")) return numeric / 1000;
+    if (unit.includes("mbit") || unit.includes("mbps")) return numeric;
+    if (unit.includes("gb/s") || unit.includes("gbyte")) return numeric * 8000;
+    if (unit.includes("mb/s") || unit.includes("mbyte")) return numeric * 8;
+    if (unit.includes("kb/s") || unit.includes("kbyte")) return numeric * 8 / 1000;
+    if (unit.includes("byte/s") || unit === "b/s") return numeric * 8 / 1e6;
+    return numeric;
+  }
+
+  _findUplinkPort(uplink) {
+    if (!uplink || !uplink.switch) return null;
+    const targetName = String(uplink.switch).toLowerCase();
+    const owner = (this._config.switches || []).find((sw) => String(sw.name || "").toLowerCase() === targetName)
+      || (this._config.gateway && String(this._config.gateway.name || "").toLowerCase() === targetName ? this._config.gateway : null);
+    if (!owner || !Array.isArray(owner.ports)) return null;
+    return owner.ports.find((port) => String(port.number) === String(uplink.port)) || null;
+  }
+
+  _wireLoad(port) {
+    if (!port) return null;
+    const speed = this._speedMbps(port.speed_entity || port.speed);
+    if (!speed) return null;
+    const rx = this._trafficMbps(port.rx_entity || port.rx);
+    const tx = this._trafficMbps(port.tx_entity || port.tx);
+    if (rx === null && tx === null) return null;
+    const ratio = Math.max(rx || 0, tx || 0) / speed;
+    const color = ratio >= 0.85 ? "red" : ratio >= 0.6 ? "amber" : "green";
+    return { color, title: "Auslastung: " + Math.round(ratio * 100) + "%" };
+  }
+
   _latency(entityId) {
     const state = this._state(entityId);
     if (!state || OFFLINE.has(String(state.state).toLowerCase())) return "";
@@ -782,6 +832,20 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   _name(entityId, fallback) {
     const state = this._state(entityId);
     return state && state.attributes && state.attributes.friendly_name ? state.attributes.friendly_name : fallback;
+  }
+
+  _offlineDeviceCount() {
+    const accessPoints = this._config.access_points || [];
+    const switches = this._config.switches || [];
+    let count = 0;
+    accessPoints.forEach((ap) => {
+      if (this._health(ap.status_entity || ap.entity).key === "offline") count++;
+    });
+    switches.forEach((switchConfig) => {
+      if (this._health(switchConfig.status_entity || switchConfig.entity).key === "offline") count++;
+    });
+    if (this._config.gateway && this._health(this._config.gateway.status_entity || this._config.gateway.entity).key === "offline") count++;
+    return count;
   }
 
   _linkTargetId(switchName, portNumber) {
@@ -842,7 +906,9 @@ class UbiquitiNetworkDashboard extends HTMLElement {
 
     if (ap.uplink && (ap.uplink.switch || ap.uplink.port)) {
       const link = element("div", "uplink");
-      const dot = element("span", "wire-dot " + LINK_COLORS[index % LINK_COLORS.length]);
+      const load = this._wireLoad(this._findUplinkPort(ap.uplink));
+      const dot = element("span", "wire-dot " + (load ? load.color : LINK_COLORS[index % LINK_COLORS.length]));
+      if (load) dot.title = load.title;
       dot.dataset.wireFrom = "ap-" + index;
       link.append(dot, icon("arrow-down"), document.createTextNode((ap.uplink.switch || "Switch") + (ap.uplink.port ? " · Port " + ap.uplink.port : "")));
       item.append(link);
@@ -873,7 +939,10 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     }
     const localUplinkPort = switchConfig.uplink && (switchConfig.uplink.local_port || switchConfig.uplink.source_port);
     if (localUplinkPort !== undefined && String(localUplinkPort) === String(port.number)) {
-      const dot = element("span", "wire-dot port-dot port-source-dot " + LINK_COLORS[(this._config.access_points.length + switchIndex) % LINK_COLORS.length]);
+      const load = this._wireLoad(this._findUplinkPort(switchConfig.uplink)) || this._wireLoad(port);
+      const color = load ? load.color : LINK_COLORS[(this._config.access_points.length + switchIndex) % LINK_COLORS.length];
+      const dot = element("span", "wire-dot port-dot port-source-dot " + color);
+      if (load) dot.title = load.title;
       dot.dataset.wireFrom = "switch-" + switchIndex;
       connector.append(dot);
     }
@@ -1010,8 +1079,31 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return node;
   }
 
+  _captureScrollPositions() {
+    const positions = [];
+    let node = this.parentNode;
+    while (node) {
+      if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+        node = node.host;
+        continue;
+      }
+      if (node.scrollHeight > node.clientHeight) positions.push([node, node.scrollTop]);
+      node = node.parentNode;
+    }
+    const scrollingElement = document.scrollingElement || document.documentElement;
+    if (scrollingElement) positions.push([scrollingElement, scrollingElement.scrollTop]);
+    return positions;
+  }
+
+  _restoreScrollPositions(positions) {
+    positions.forEach(([node, scrollTop]) => {
+      if (node.scrollTop !== scrollTop) node.scrollTop = scrollTop;
+    });
+  }
+
   _render() {
     if (!this.isConnected || !this._config) return;
+    const scrollPositions = this._captureScrollPositions();
     this.replaceChildren();
     const card = element("ha-card", "network-card theme-" + (["light", "dark"].includes(this._config.theme) ? this._config.theme : "auto"));
     card.style.display = "block";
@@ -1037,6 +1129,12 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const chip = element("span", "header-gateway-chip " + gatewayHealth.key);
       chip.append(icon("web"), document.createTextNode("Internet " + label));
       stats.append(chip);
+    }
+    const offlineCount = this._offlineDeviceCount();
+    if (offlineCount > 0) {
+      const alertChip = element("span", "header-alert-chip");
+      alertChip.append(icon("alert"), document.createTextNode(offlineCount + (offlineCount === 1 ? " Gerät offline" : " Geräte offline")));
+      stats.append(alertChip);
     }
     header.append(heading, stats);
     card.append(header);
@@ -1095,7 +1193,11 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     footer.append(legend, element("span", "", "Ubiquiti Network Dashboard"));
     card.append(footer);
     this.append(card);
-    requestAnimationFrame(() => this._drawWires());
+    this._restoreScrollPositions(scrollPositions);
+    requestAnimationFrame(() => {
+      this._drawWires();
+      this._restoreScrollPositions(scrollPositions);
+    });
   }
 
   _drawWires() {
@@ -1127,7 +1229,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         return top > Math.min(y1, y2) && bottom < Math.max(y1, y2);
       });
       const wire = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-      const color = LINK_COLORS.find((item) => from.classList.contains(item)) || "cyan";
+      const color = WIRE_COLOR_KEYS.find((item) => from.classList.contains(item)) || "cyan";
       wire.setAttribute("class", "wire " + color);
       if (intermediateNodes.length) {
         const rectangles = intermediateNodes.map((node) => node.getBoundingClientRect());
