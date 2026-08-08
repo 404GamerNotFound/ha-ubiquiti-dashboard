@@ -20,6 +20,8 @@ Netzwerktopologie dar.
 - Responsive Darstellung, Home-Assistant-Theme-Variablen und keine externen
   Abhängigkeiten
 - Nativer Lovelace-UI-Editor für Titel, APs, Switches, Ports und Uplinks
+- Automatische Entitätserkennung mit übernehmbaren AP-, Switch- und
+  Port-Vorschlägen
 - Klick auf ein Gerät oder einen Port öffnet dessen Home-Assistant-Detaildialog
 
 ## Installation über HACS
@@ -41,6 +43,15 @@ ist die Modulressource:
 url: /hacsfiles/ha-ubiquiti-dashboard/ha-ubiquiti-dashboard.js
 type: module
 ~~~
+
+## Automatische Erkennung
+
+Im visuellen Editor steht unter **Automatische Erkennung** die Aktion
+**Entitäten analysieren** zur Verfügung. Sie durchsucht die vorhandenen
+Home-Assistant-Entitäten nach den üblichen UniFi-Portmustern und schlägt
+Switches, ihre Ports sowie erkannte Access Points vor. Die Vorschläge werden
+erst durch **übernehmen** in die Kartenkonfiguration geschrieben; Uplink-Ziele
+werden dabei bewusst nicht geraten und anschließend im Editor ergänzt.
 
 ## Schnellstart
 

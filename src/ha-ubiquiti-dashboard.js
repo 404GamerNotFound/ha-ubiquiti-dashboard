@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.5.0";
+const CARD_VERSION = "1.6.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -303,28 +303,135 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     this._emitConfigChanged();
   }
 
+  _deviceName(key) {
+    const parts = String(key).split("_").filter((part, index, all) => index === 0 || part !== all[index - 1]);
+    return parts.map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+  }
+
+  _findDeviceEntity(records, key, matcher) {
+    const prefix = key + "_";
+    const record = records.find((item) => item.objectId.startsWith(prefix) && !/_port_\d+/.test(item.objectId) && matcher(item));
+    return record && record.entityId;
+  }
+
+  _discoverNetworkDevices() {
+    const records = Object.entries((this._hass && this._hass.states) || {}).map(([entityId, state]) => {
+      const [domain, objectId] = entityId.split(".");
+      const friendlyName = (state.attributes && state.attributes.friendly_name) || "";
+      return { entityId, state, domain, objectId, descriptor: (objectId + " " + friendlyName).toLowerCase() };
+    });
+    const switchCandidates = new Map();
+    records.forEach((record) => {
+      const match = record.objectId.match(/^(.+?)_port_(\d+)(?:_(.*))?$/);
+      if (!match) return;
+      const [, key, portNumber, suffix = ""] = match;
+      const candidate = switchCandidates.get(key) || { key, ports: new Map() };
+      const port = candidate.ports.get(portNumber) || { number: Number(portNumber), name: "Port " + portNumber };
+      const descriptor = record.descriptor;
+      const isPoePower = /poe.*(leistung|power|watt)|(leistung|power|watt).*poe/.test(descriptor);
+      const isPoe = /poe/.test(descriptor);
+      const isSpeed = /verbindungsgeschwindigkeit|link[_ ]?speed|\bspeed\b/.test(descriptor);
+      const isRx = /(^|[_ ])(rx|download|received)([_ ]|$)/.test(descriptor);
+      const isTx = /(^|[_ ])(tx|upload|sent)([_ ]|$)/.test(descriptor);
+      if (isPoePower) port.poe_power_entity = record.entityId;
+      else if (isPoe) port.poe_entity = record.entityId;
+      else if (isSpeed) port.speed_entity = record.entityId;
+      else if (isRx) port.rx_entity = record.entityId;
+      else if (isTx) port.tx_entity = record.entityId;
+      else if ((record.domain === "switch" || record.domain === "binary_sensor") && (!suffix || !port.status_entity)) port.status_entity = record.entityId;
+      candidate.ports.set(portNumber, port);
+      switchCandidates.set(key, candidate);
+    });
+    const switches = [...switchCandidates.values()].map((candidate) => {
+      const statusEntity = this._findDeviceEntity(records, candidate.key, (item) => /(?:_|^)(zustand|status|state)$/.test(item.objectId));
+      const clientsEntity = this._findDeviceEntity(records, candidate.key, (item) => /(?:_|^)(clients|client_count)$/.test(item.objectId));
+      const switchConfig = {
+        name: this._deviceName(candidate.key),
+        ports: [...candidate.ports.values()].sort((left, right) => left.number - right.number),
+      };
+      if (statusEntity) switchConfig.status_entity = statusEntity;
+      if (clientsEntity) switchConfig.clients_entity = clientsEntity;
+      return switchConfig;
+    });
+    const accessPoints = records.reduce((suggestions, record) => {
+      const match = record.objectId.match(/^(.+?)_(?:clients|client_count)$/);
+      if (!match || record.domain !== "sensor" || switchCandidates.has(match[1])) return suggestions;
+      const key = match[1];
+      const attributes = record.state.attributes || {};
+      const isAccessPoint = /(^|[_ ])(ap|access[_ ]?point|u[4-9])([_ ]|$)/.test(record.descriptor) || attributes.device_type === "uap" || attributes.type === "uap";
+      if (!isAccessPoint) return suggestions;
+      const statusEntity = this._findDeviceEntity(records, key, (item) => /(?:_|^)(zustand|status|state)$/.test(item.objectId));
+      const accessPoint = { name: this._deviceName(key), clients_entity: record.entityId };
+      if (statusEntity) accessPoint.status_entity = statusEntity;
+      if (attributes.model || attributes.model_name) accessPoint.model = attributes.model || attributes.model_name;
+      suggestions.push(accessPoint);
+      return suggestions;
+    }, []);
+    return { switches, accessPoints };
+  }
+
+  _acceptDiscovery(kind) {
+    const suggestions = this._discovery && this._discovery[kind] ? this._discovery[kind] : [];
+    const target = kind === "switches" ? this._config.switches : this._config.access_points;
+    suggestions.forEach((suggestion) => {
+      const statusEntity = suggestion.status_entity || suggestion.entity;
+      const exists = target.some((item) => (statusEntity && (item.status_entity || item.entity) === statusEntity) || String(item.name || "").toLowerCase() === String(suggestion.name || "").toLowerCase());
+      if (!exists) target.push(clone(suggestion));
+    });
+  }
+
   _handleAction(button) {
     const action = button.dataset.editorAction;
     const index = Number(button.dataset.editorIndex);
     const switchIndex = Number(button.dataset.editorSwitchIndex);
     const portIndex = Number(button.dataset.editorPortIndex);
     const bandIndex = Number(button.dataset.editorBandIndex);
-    if (action === "add-ap") this._config.access_points.push({ name: "Neuer Access Point" });
-    if (action === "remove-ap") this._config.access_points.splice(index, 1);
+    let configChanged = false;
+    if (action === "scan-entities") this._discovery = this._discoverNetworkDevices();
+    if (action === "accept-switches") {
+      this._acceptDiscovery("switches");
+      configChanged = true;
+    }
+    if (action === "accept-access-points") {
+      this._acceptDiscovery("accessPoints");
+      configChanged = true;
+    }
+    if (action === "add-ap") {
+      this._config.access_points.push({ name: "Neuer Access Point" });
+      configChanged = true;
+    }
+    if (action === "remove-ap") {
+      this._config.access_points.splice(index, 1);
+      configChanged = true;
+    }
     if (action === "add-band") {
       const bands = this._config.access_points[index].bands || (this._config.access_points[index].bands = []);
       bands.push({ label: "Neues Band" });
+      configChanged = true;
     }
-    if (action === "remove-band") this._config.access_points[index].bands.splice(bandIndex, 1);
-    if (action === "add-switch") this._config.switches.push({ name: "Neuer Switch", ports: [] });
-    if (action === "remove-switch") this._config.switches.splice(index, 1);
+    if (action === "remove-band") {
+      this._config.access_points[index].bands.splice(bandIndex, 1);
+      configChanged = true;
+    }
+    if (action === "add-switch") {
+      this._config.switches.push({ name: "Neuer Switch", ports: [] });
+      configChanged = true;
+    }
+    if (action === "remove-switch") {
+      this._config.switches.splice(index, 1);
+      configChanged = true;
+    }
     if (action === "add-port") {
       const ports = this._config.switches[switchIndex].ports || (this._config.switches[switchIndex].ports = []);
       const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
       ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      configChanged = true;
     }
-    if (action === "remove-port") this._config.switches[switchIndex].ports.splice(portIndex, 1);
-    this._emitConfigChanged();
+    if (action === "remove-port") {
+      this._config.switches[switchIndex].ports.splice(portIndex, 1);
+      configChanged = true;
+    }
+    if (configChanged) this._emitConfigChanged();
     this._render();
   }
 
@@ -345,6 +452,25 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       this._field("Theme", this._config.theme, { key: "theme", options: [["auto", "Automatisch"], ["dark", "Dunkel"], ["light", "Hell"]] })
     );
     general.append(generalGrid);
+    const discovery = this._section("Automatische Erkennung", "Durchsucht vorhandene Home-Assistant-Entitäten und erstellt unverbindliche Vorschläge.");
+    const discoveryList = element("div", "editor-list");
+    if (this._discovery) {
+      const discoveredSwitches = this._discovery.switches || [];
+      const discoveredAccessPoints = this._discovery.accessPoints || [];
+      if (!discoveredSwitches.length && !discoveredAccessPoints.length) {
+        discoveryList.append(element("div", "editor-empty", "Keine passenden UniFi-Entitäten gefunden. Prüfe, ob die UniFi-Integration Entitäten bereitstellt."));
+      } else {
+        if (discoveredSwitches.length) discoveryList.append(element("div", "editor-empty", "Switches: " + discoveredSwitches.map((item) => item.name + " (" + item.ports.length + " Ports)").join(", ")));
+        if (discoveredAccessPoints.length) discoveryList.append(element("div", "editor-empty", "Access Points: " + discoveredAccessPoints.map((item) => item.name).join(", ")));
+      }
+    } else {
+      discoveryList.append(element("div", "editor-empty", "Die Erkennung verändert deine Konfiguration erst, nachdem du passende Vorschläge übernimmst."));
+    }
+    const discoveryActions = element("div", "editor-item-actions");
+    discoveryActions.append(this._button("Entitäten analysieren", "scan-entities", { kind: "secondary" }));
+    if (this._discovery && this._discovery.switches.length) discoveryActions.append(this._button(this._discovery.switches.length + " Switches übernehmen", "accept-switches"));
+    if (this._discovery && this._discovery.accessPoints.length) discoveryActions.append(this._button(this._discovery.accessPoints.length + " APs übernehmen", "accept-access-points"));
+    discovery.append(discoveryList, discoveryActions);
     const aps = this._section("Access Points", "Der Uplink verbindet einen AP mit einem Port eines Switches.");
     const apList = element("div", "editor-list");
     if (this._config.access_points.length) this._config.access_points.forEach((ap, index) => apList.append(this._apEditor(ap, index)));
@@ -359,7 +485,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const switchActions = element("div", "editor-item-actions");
     switchActions.append(this._button("Switch hinzufügen", "add-switch"));
     switches.append(switchList, switchActions);
-    editor.append(header, general, aps, switches, this._entityList(), this._switchList());
+    editor.append(header, general, discovery, aps, switches, this._entityList(), this._switchList());
     this._root.append(editor);
     if (this._listenersAttached) return;
     this._listenersAttached = true;
