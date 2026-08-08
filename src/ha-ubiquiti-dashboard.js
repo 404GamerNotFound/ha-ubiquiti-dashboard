@@ -39,6 +39,7 @@ const STYLE = [
   "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
   "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
   ".switch-group{display:grid;gap:10px}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:grid;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
+  ".client-value{color:var(--net-text);font-size:.9rem;font-weight:750}.band-value{color:var(--net-green);font-weight:700}.port-metrics span{color:#66818a;font-size:.62rem}.port-metrics span.poe-power{color:#946e20;font-weight:750}",
   ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".header-gateway-chip.online{color:var(--net-green)}.header-gateway-chip.offline{color:var(--net-red)}.header-gateway-chip.unknown{color:var(--net-amber)}.header-gateway-chip ha-icon{color:inherit}",
   ".header-stats span.header-alert-chip{color:var(--net-red);border-color:rgba(255,113,132,.5);background:rgba(255,113,132,.14);font-weight:700}.header-alert-chip ha-icon{color:var(--net-red)}",
@@ -590,20 +591,24 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (config.access_points && !Array.isArray(config.access_points)) throw new Error("access_points muss eine Liste sein.");
     if (config.switches && !Array.isArray(config.switches)) throw new Error("switches muss eine Liste sein.");
     if (config.gateway && typeof config.gateway !== "object") throw new Error("gateway muss ein Objekt sein.");
-    this._config = Object.assign({ title: "UniFi Network", theme: "auto", access_points: [], switches: [] }, clone(config));
-    this._config.access_points = Array.isArray(this._config.access_points) ? this._config.access_points : [];
-    this._config.switches = Array.isArray(this._config.switches) ? this._config.switches : [];
+    const nextConfig = Object.assign({ title: "UniFi Network", theme: "auto", access_points: [], switches: [] }, clone(config));
+    nextConfig.access_points = Array.isArray(nextConfig.access_points) ? nextConfig.access_points : [];
+    nextConfig.switches = Array.isArray(nextConfig.switches) ? nextConfig.switches : [];
+    const configSignature = JSON.stringify(nextConfig);
+    if (configSignature === this._configSignature) return;
+    this._config = nextConfig;
+    this._configSignature = configSignature;
     this._stateSignature = this._hassStateSignature(this._hass);
     this._render();
   }
 
   set hass(hass) {
     const stateSignature = this._hassStateSignature(hass);
+    this._hass = hass;
     if (stateSignature === this._stateSignature) {
-      this._hass = hass;
+      this._refreshDynamicValues();
       return;
     }
-    this._hass = hass;
     this._stateSignature = stateSignature;
     this._render();
   }
@@ -638,40 +643,25 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     };
     this._config.access_points.forEach((ap) => {
       add(ap.status_entity || ap.entity);
-      add(ap.clients_entity || ap.clients);
-      (ap.bands || []).forEach((band) => add(band.entity));
     });
     this._config.switches.forEach((switchConfig) => {
       add(switchConfig.status_entity || switchConfig.entity);
-      add(switchConfig.clients_entity || switchConfig.clients);
-      add(switchConfig.poe_budget_entity);
-      add(switchConfig.poe_usage_entity || switchConfig.poe_usage);
       (switchConfig.ports || []).forEach((port) => {
         add(port.status_entity || port.entity);
-        add(port.speed_entity || port.speed);
-        add(port.rx_entity || port.rx);
-        add(port.tx_entity || port.tx);
         add(port.poe_entity || port.poe);
-        add(port.poe_power_entity || port.poe_power);
       });
     });
     if (this._config.gateway) {
       const gateway = this._config.gateway;
       add(gateway.status_entity || gateway.entity);
-      add(gateway.wan_ip_entity);
-      add(gateway.download_entity || gateway.download);
-      add(gateway.upload_entity || gateway.upload);
-      add(gateway.latency_entity || gateway.latency);
-      add(gateway.clients_entity || gateway.clients);
       (gateway.ports || []).forEach((port) => {
         add(port.status_entity || port.entity);
-        add(port.speed_entity || port.speed);
+        add(port.poe_entity || port.poe);
       });
     }
     return [...entityIds].map((entityId) => {
       const state = hass.states[entityId];
-      const attributes = state && state.attributes ? state.attributes : {};
-      return [entityId, state && state.state, attributes.friendly_name, attributes.unit_of_measurement].join("\u001f");
+      return [entityId, state && state.state].join("\u001f");
     }).join("\u001e");
   }
 
@@ -709,6 +699,47 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const state = this._state(entityId);
     if (!state || OFFLINE.has(String(state.state).toLowerCase())) return fallback;
     return state.state;
+  }
+
+  _liveText(entityId, format, fallback = "", prefix = "") {
+    const node = element("span");
+    node.dataset.liveEntity = entityId || "";
+    node.dataset.liveFormat = format;
+    node.dataset.liveFallback = fallback;
+    node.dataset.livePrefix = prefix;
+    this._refreshLiveNode(node);
+    return node;
+  }
+
+  _refreshLiveNode(node) {
+    const entityId = node.dataset.liveEntity;
+    const format = node.dataset.liveFormat;
+    let value = "";
+    if (format === "value") value = this._value(entityId, node.dataset.liveFallback || "");
+    if (format === "speed") value = this._speed(entityId);
+    if (format === "traffic") value = this._traffic(entityId);
+    if (format === "poe-power") value = this._poePower(entityId);
+    if (format === "latency") value = this._latency(entityId);
+    node.textContent = value === "" ? (node.dataset.liveFallback || "") : (node.dataset.livePrefix || "") + value;
+  }
+
+  _totalClientCount() {
+    return (this._config.access_points || []).reduce((sum, ap) => {
+      const value = Number.parseFloat(String(this._value(ap.clients_entity || ap.clients, "0")).replace(",", "."));
+      return sum + (Number.isFinite(value) ? value : 0);
+    }, 0);
+  }
+
+  _refreshDynamicValues() {
+    if (!this.isConnected || !this._config) return;
+    this.querySelectorAll("[data-live-entity]").forEach((node) => this._refreshLiveNode(node));
+    this.querySelectorAll("[data-live-total-clients]").forEach((node) => {
+      node.textContent = this._totalClientCount() + " Clients";
+    });
+    this.querySelectorAll("[data-live-switch-poe-index]").forEach((node) => {
+      const switchConfig = this._config.switches[Number(node.dataset.liveSwitchPoeIndex)];
+      node.textContent = switchConfig ? this._switchPoeSummary(switchConfig, switchConfig.ports || []) : "";
+    });
   }
 
   _speed(entityId) {
@@ -891,14 +922,18 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (ap.model) item.append(element("span", "model", ap.model));
 
     const clients = element("div", "client-count");
-    clients.append(icon("account-group"), element("strong", "", this._value(ap.clients_entity || ap.clients, "–")), document.createTextNode("Clients"));
+    const clientValue = this._liveText(ap.clients_entity || ap.clients, "value", "–");
+    clientValue.className = "client-value";
+    clients.append(icon("account-group"), clientValue, document.createTextNode("Clients"));
     item.append(clients);
 
     if (Array.isArray(ap.bands) && ap.bands.length) {
       const metrics = element("div", "band-metrics");
       ap.bands.forEach((band) => {
         const metric = element("span");
-        metric.append(document.createTextNode((band.label || "Band") + ": "), element("strong", "", this._value(band.entity, "–")));
+        const bandValue = this._liveText(band.entity, "value", "–");
+        bandValue.className = "band-value";
+        metric.append(document.createTextNode((band.label || "Band") + ": "), bandValue);
         metrics.append(metric);
       });
       item.append(metrics);
@@ -951,16 +986,20 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (port.icon) label.append(icon(port.icon));
     label.append(element("span", "", port.name || this._name(entityId, "Nicht belegt")));
     portButton.append(connector, label);
-    const speed = this._speed(port.speed_entity || port.speed);
-    const rx = this._traffic(port.rx_entity || port.rx);
-    const tx = this._traffic(port.tx_entity || port.tx);
-    const poePower = this._poePower(port.poe_power_entity || port.poe_power);
-    if (speed || rx || tx || poePower) {
+    const speedEntity = port.speed_entity || port.speed;
+    const rxEntity = port.rx_entity || port.rx;
+    const txEntity = port.tx_entity || port.tx;
+    const poePowerEntity = port.poe_power_entity || port.poe_power;
+    if (speedEntity || rxEntity || txEntity || poePowerEntity) {
       const metrics = element("div", "port-metrics");
-      if (speed) metrics.append(element("small", "", speed));
-      if (rx) metrics.append(element("small", "", "↓ " + rx));
-      if (tx) metrics.append(element("small", "", "↑ " + tx));
-      if (poePower) metrics.append(element("small", "poe-power", "⚡ " + poePower));
+      if (speedEntity) metrics.append(this._liveText(speedEntity, "speed"));
+      if (rxEntity) metrics.append(this._liveText(rxEntity, "traffic", "", "↓ "));
+      if (txEntity) metrics.append(this._liveText(txEntity, "traffic", "", "↑ "));
+      if (poePowerEntity) {
+        const poePower = this._liveText(poePowerEntity, "poe-power", "", "⚡ ");
+        poePower.className = "poe-power";
+        metrics.append(poePower);
+      }
       portButton.append(metrics);
     }
     return portButton;
@@ -985,8 +1024,12 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const activePorts = ports.filter((port) => this._online(port.status_entity || port.entity) === true).length;
     const summary = element("div", "switch-summary");
     summary.append(this._badge(health), document.createTextNode(activePorts + "/" + ports.length + " aktive Ports"));
-    const poeSummary = this._switchPoeSummary(switchConfig, ports);
-    if (poeSummary) summary.append(element("span", "poe-summary", poeSummary));
+    const hasPoeSummary = switchConfig.poe_budget_entity || switchConfig.poe_budget !== undefined || switchConfig.poe_usage_entity || switchConfig.poe_usage || ports.some((port) => port.poe_power_entity || port.poe_power);
+    if (hasPoeSummary) {
+      const poeSummary = element("span", "poe-summary", this._switchPoeSummary(switchConfig, ports));
+      poeSummary.dataset.liveSwitchPoeIndex = String(index);
+      summary.append(poeSummary);
+    }
     const collapse = element("button", "collapse-toggle");
     collapse.type = "button";
     collapse.title = collapsed ? "Switch ausklappen" : "Switch einklappen";
@@ -1044,10 +1087,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     title.append(gatewayIcon, titleText);
     const summary = element("div", "switch-summary");
     summary.append(this._badge(health));
-    const wanIp = this._value(gateway.wan_ip_entity, "");
-    if (wanIp) summary.append(element("span", "", wanIp));
-    const latency = this._latency(gateway.latency_entity || gateway.latency);
-    if (latency) summary.append(element("span", "", "↝ " + latency));
+    if (gateway.wan_ip_entity) summary.append(this._liveText(gateway.wan_ip_entity, "value"));
+    if (gateway.latency_entity || gateway.latency) summary.append(this._liveText(gateway.latency_entity || gateway.latency, "latency", "", "↝ "));
     const headingActions = element("div", "switch-heading-actions");
     headingActions.append(summary);
     heading.append(title, headingActions);
@@ -1057,16 +1098,16 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     brand.append(icon("earth"));
     face.append(brand);
 
-    const download = this._traffic(gateway.download_entity || gateway.download);
-    const upload = this._traffic(gateway.upload_entity || gateway.upload);
-    const clients = this._value(gateway.clients_entity || gateway.clients, "");
-    if (download || upload || clients) {
+    const downloadEntity = gateway.download_entity || gateway.download;
+    const uploadEntity = gateway.upload_entity || gateway.upload;
+    const clientsEntity = gateway.clients_entity || gateway.clients;
+    if (downloadEntity || uploadEntity || clientsEntity) {
       const metrics = element("div", "gateway-metrics");
-      if (download) metrics.append(element("span", "", "↓ " + download));
-      if (upload) metrics.append(element("span", "", "↑ " + upload));
-      if (clients) {
+      if (downloadEntity) metrics.append(this._liveText(downloadEntity, "traffic", "", "↓ "));
+      if (uploadEntity) metrics.append(this._liveText(uploadEntity, "traffic", "", "↑ "));
+      if (clientsEntity) {
         const clientMetric = element("span");
-        clientMetric.append(icon("account-group"), document.createTextNode(clients));
+        clientMetric.append(icon("account-group"), this._liveText(clientsEntity, "value"));
         metrics.append(clientMetric);
       }
       face.append(metrics);
@@ -1110,19 +1151,21 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     card.append(element("style", "", STYLE));
     const accessPoints = this._config.access_points || [];
     const switches = this._config.switches || [];
-    const totalClients = accessPoints.reduce((sum, ap) => {
-      const value = Number.parseFloat(String(this._value(ap.clients_entity || ap.clients, "0")).replace(",", "."));
-      return sum + (Number.isFinite(value) ? value : 0);
-    }, 0);
+    const totalClients = this._totalClientCount();
     const header = element("div", "card-header");
     const heading = element("div");
     heading.append(element("p", "eyebrow", "NETZWERKTOPOLOGIE"), element("h1", "", this._config.title || "UniFi Network"));
     const stats = element("div", "header-stats");
-    [[ "access-point", accessPoints.length + " APs" ], [ "switch", switches.length + " Switches" ], [ "account-group", totalClients + " Clients" ]].forEach((stat) => {
+    [[ "access-point", accessPoints.length + " APs" ], [ "switch", switches.length + " Switches" ]].forEach((stat) => {
       const chip = element("span");
       chip.append(icon(stat[0]), document.createTextNode(stat[1]));
       stats.append(chip);
     });
+    const clientsChip = element("span");
+    const clientsTotal = element("span", "", totalClients + " Clients");
+    clientsTotal.dataset.liveTotalClients = "";
+    clientsChip.append(icon("account-group"), clientsTotal);
+    stats.append(clientsChip);
     if (this._config.gateway) {
       const gatewayHealth = this._health(this._config.gateway.status_entity || this._config.gateway.entity);
       const label = gatewayHealth.key === "online" ? "Online" : gatewayHealth.key === "offline" ? "Offline" : "Unbekannt";
@@ -1197,6 +1240,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     requestAnimationFrame(() => {
       this._drawWires();
       this._restoreScrollPositions(scrollPositions);
+      requestAnimationFrame(() => this._restoreScrollPositions(scrollPositions));
     });
   }
 
