@@ -4,7 +4,7 @@
  */
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
-const CARD_VERSION = "1.1.0";
+const CARD_VERSION = "1.2.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -30,10 +30,10 @@ const STYLE = [
   ".device-name{max-width:100%;overflow:hidden;color:var(--net-text);font-size:.96rem;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.model{margin-top:3px;color:var(--net-muted);font-size:.72rem}.client-count{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--net-muted);font-size:.72rem}.client-count ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.client-count strong{color:var(--net-text);font-size:.9rem}.band-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:7px;color:var(--net-muted);font-size:.68rem}.band-metrics strong{color:var(--net-green)}",
   ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}",
   ".switches{position:relative;z-index:1;display:grid;gap:16px;margin-top:46px}.switch-node{border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
-  ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port small{color:#66818a;font-size:.62rem}",
+  ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port small{color:#66818a;font-size:.62rem}",
   ".empty-ports{grid-column:1/-1;padding:15px;color:#5e7780;text-align:center;font-size:.78rem}.empty-state{display:flex;align-items:center;gap:16px;margin:20px;padding:28px;border:1px dashed var(--net-border);border-radius:16px;color:var(--net-muted)}.empty-state h2{margin:0 0 5px;color:var(--net-text);font-size:1rem}.empty-state p{max-width:480px;margin:0;font-size:.82rem;line-height:1.5}.empty-icon{display:grid;place-items:center;flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:rgba(38,213,251,.13)}.empty-icon ha-icon{width:25px;height:25px}",
   "footer{display:flex;justify-content:space-between;gap:12px;padding:10px 20px 13px;border-top:1px solid var(--net-border);color:var(--net-muted);font-size:.66rem}.legend{display:flex;align-items:center;gap:5px}.legend i{margin-left:5px;width:6px;height:6px}",
-  "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.access-points{grid-template-columns:1fr}.device{height:254px}.switches{margin-top:18px}.wires{display:none}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}.uplink .wire-dot{display:none}}",
+  "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.access-points{grid-template-columns:1fr}.device{height:254px}.switches{margin-top:18px}.wires,.wire-dot{display:none}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
 ].join("");
 
 function element(tag, className, text) {
@@ -63,6 +63,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (config.access_points && !Array.isArray(config.access_points)) throw new Error("access_points muss eine Liste sein.");
     if (config.switches && !Array.isArray(config.switches)) throw new Error("switches muss eine Liste sein.");
     this._config = Object.assign({ title: "UniFi Network", theme: "auto", access_points: [], switches: [] }, clone(config));
+    this._config.access_points = Array.isArray(this._config.access_points) ? this._config.access_points : [];
+    this._config.switches = Array.isArray(this._config.switches) ? this._config.switches : [];
     this._render();
   }
 
@@ -135,6 +137,17 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return state && state.attributes && state.attributes.friendly_name ? state.attributes.friendly_name : fallback;
   }
 
+  _linkTargetId(switchName, portNumber) {
+    const accessPointIndex = this._config.access_points.findIndex((ap) => {
+      return ap.uplink && String(ap.uplink.switch || "").toLowerCase() === String(switchName).toLowerCase() && String(ap.uplink.port) === String(portNumber);
+    });
+    if (accessPointIndex >= 0) return "ap-" + accessPointIndex;
+    const switchIndex = this._config.switches.findIndex((item) => {
+      return item.uplink && String(item.uplink.switch || "").toLowerCase() === String(switchName).toLowerCase() && String(item.uplink.port) === String(portNumber);
+    });
+    return switchIndex >= 0 ? "switch-" + switchIndex : "";
+  }
+
   _clickable(node, entityId) {
     if (!entityId) return;
     node.addEventListener("click", () => {
@@ -190,9 +203,10 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return item;
   }
 
-  _port(port, switchName, portIndex) {
+  _port(port, switchConfig, switchIndex, portIndex) {
     const entityId = port.status_entity || port.entity;
     const health = this._health(entityId);
+    const switchName = switchConfig.name || this._name(switchConfig.status_entity || switchConfig.entity, "UniFi Switch");
     const portButton = element("button", "port " + health.key);
     portButton.type = "button";
     this._clickable(portButton, entityId);
@@ -204,12 +218,16 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       poe.append(icon("flash"));
       connector.append(poe);
     }
-    const apIndex = this._config.access_points.findIndex((ap) => {
-      return ap.uplink && String(ap.uplink.switch || "").toLowerCase() === String(switchName).toLowerCase() && String(ap.uplink.port) === String(port.number);
-    });
-    if (apIndex >= 0) {
+    const targetId = this._linkTargetId(switchName, port.number);
+    if (targetId) {
       const dot = element("span", "wire-dot port-dot");
-      dot.dataset.wireTo = "ap-" + apIndex;
+      dot.dataset.wireTo = targetId;
+      connector.append(dot);
+    }
+    const localUplinkPort = switchConfig.uplink && (switchConfig.uplink.local_port || switchConfig.uplink.source_port);
+    if (localUplinkPort !== undefined && String(localUplinkPort) === String(port.number)) {
+      const dot = element("span", "wire-dot port-dot port-source-dot " + LINK_COLORS[(this._config.access_points.length + switchIndex) % LINK_COLORS.length]);
+      dot.dataset.wireFrom = "switch-" + switchIndex;
       connector.append(dot);
     }
     const label = element("span", "port-name");
@@ -247,7 +265,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (!ports.length) {
       portsNode.append(element("div", "empty-ports", "Noch keine Ports konfiguriert"));
     } else {
-      ports.forEach((port, portIndex) => portsNode.append(this._port(port, switchConfig.name || this._name(entityId, "UniFi Switch"), portIndex)));
+      ports.forEach((port, portIndex) => portsNode.append(this._port(port, switchConfig, index, portIndex)));
     }
     face.append(brand, portsNode);
     node.append(heading, face);

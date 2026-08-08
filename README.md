@@ -100,10 +100,24 @@ switches:
 | speed_entity | Entity-ID | Optionaler Text unter einem Port, etwa 1 Gbit/s |
 | poe_entity | Entity-ID | Bei on erscheint am Port ein PoE-Symbol |
 | uplink.switch / uplink.port | Text / Zahl | Verknüpft einen AP mit einem Switch-Port |
+| uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch-Verbindung |
 
 Die kürzeren Aliasse entity, clients, poe und speed werden ebenfalls akzeptiert.
 Die Statusauswertung behandelt on, online, connected und up als online; off,
 unavailable, unknown, disconnected und down als offline.
+
+Ein Switch-Uplink wird am Switch selbst hinterlegt. local_port ist der Port am
+dargestellten Switch; switch und port bezeichnen den Ziel-Switch und dessen
+Ziel-Port:
+
+~~~yaml
+switches:
+  - name: Dachboden
+    uplink:
+      switch: Heizungsraum
+      port: 3
+      local_port: 1
+~~~
 
 ## HACS- und Entwicklungsstandard
 

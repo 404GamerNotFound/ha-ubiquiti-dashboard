@@ -51,12 +51,13 @@
           {
             name: "Dachboden",
             status_entity: "sensor.dachboden_state",
+            uplink: { switch: "Heizungsraum", port: 3, local_port: 1 },
             ports: [
-              { number: 1, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_1", speed_entity: "sensor.dachboden_port_1_speed" },
-              { number: 2, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_2", speed_entity: "sensor.dachboden_port_2_speed" },
-              { number: 3, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_3", speed_entity: "sensor.dachboden_port_3_speed" },
+              { number: 1, name: "Heizungsraum Uplink", status_entity: "switch.dachboden_port_1", speed_entity: "sensor.dachboden_port_1_speed" },
+              { number: 2, name: "Dachgeschoss - U7 Lite", status_entity: "switch.dachboden_port_2", speed_entity: "sensor.dachboden_port_2_speed" },
+              { number: 3, name: "Proxmox", status_entity: "switch.dachboden_port_3", speed_entity: "sensor.dachboden_port_3_speed" },
               { number: 4, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_4", speed_entity: "sensor.dachboden_port_4_speed" },
-              { number: 5, name: "Nicht zugeordnet", status_entity: "switch.dachboden_port_5", speed_entity: "sensor.dachboden_port_5_speed" }
+              { number: 5, name: "iLO - Server", status_entity: "switch.dachboden_port_5", speed_entity: "sensor.dachboden_port_5_speed" }
             ]
           },
           {
@@ -65,7 +66,7 @@
             ports: [
               { number: 1, name: "SONOFF CAM-B1P", status_entity: "switch.heating_port_1" },
               { number: 2, name: "Dachboden AP", status_entity: "switch.heating_port_2" },
-              { number: 3, name: "Dachboden Switch", status_entity: "switch.heating_port_3" },
+              { number: 3, name: "Dachboden Switch Uplink", status_entity: "switch.heating_port_3" },
               { number: 4, name: "Reolink Kamera", status_entity: "switch.heating_port_4" },
               { number: 5, name: "Gäste-Switch", status_entity: "switch.heating_port_5" },
               { number: 6, name: "SONOFF", status_entity: "switch.heating_port_6" },
