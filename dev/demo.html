@@ -21,6 +21,8 @@
         states: {
           "sensor.dachboden_state": { state: "online", attributes: {} },
           "sensor.dachboden_clients": { state: "4", attributes: {} },
+          "sensor.obergeschoss_state": { state: "online", attributes: {} },
+          "sensor.obergeschoss_clients": { state: "13", attributes: {} },
           "switch.dachboden_port_1": { state: "on", attributes: {} },
           "switch.dachboden_port_2": { state: "on", attributes: {} },
           "switch.dachboden_port_3": { state: "on", attributes: {} },
@@ -45,7 +47,8 @@
       card.setConfig({
         title: "UniFi Network",
         access_points: [
-          { name: "Dachboden AP", status_entity: "sensor.dachboden_state", clients_entity: "sensor.dachboden_clients", uplink: { switch: "Heizungsraum", port: 2 } }
+          { name: "Dachboden AP", status_entity: "sensor.dachboden_state", clients_entity: "sensor.dachboden_clients", uplink: { switch: "Heizungsraum", port: 2 } },
+          { name: "Obergeschoss AP", model: "Ubiquiti U7 Pro Max", status_entity: "sensor.obergeschoss_state", clients_entity: "sensor.obergeschoss_clients", uplink: { switch: "Heizungsraum", port: 7 } }
         ],
         switches: [
           {
