@@ -4,7 +4,8 @@
  */
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
-const CARD_VERSION = "1.2.0";
+const EDITOR_TYPE = CARD_TYPE + "-editor";
+const CARD_VERSION = "1.3.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -38,6 +39,10 @@ const STYLE = [
   "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
 ].join("");
 
+const EDITOR_STYLE = [
+  ":host{display:block;color:var(--primary-text-color,#e1e1e1)}*{box-sizing:border-box}.editor{display:grid;gap:16px;padding:12px 4px;font-family:var(--primary-font-family,sans-serif)}.editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.editor-header h2{margin:0;font-size:1.1rem}.editor-header p{margin:4px 0 0;color:var(--secondary-text-color,#888);font-size:.85rem;line-height:1.4}.editor-section{display:grid;gap:12px;padding:14px;border:1px solid var(--divider-color,rgba(127,127,127,.25));border-radius:12px;background:var(--card-background-color,transparent)}.editor-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.editor-section-head h3{margin:0;font-size:.95rem}.editor-section-head p{margin:3px 0 0;color:var(--secondary-text-color,#888);font-size:.78rem}.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.editor-field{display:grid;gap:5px;min-width:0;color:var(--secondary-text-color,#888);font-size:.75rem;font-weight:600}.editor-field input,.editor-field select{width:100%;min-width:0;height:38px;padding:0 10px;border:1px solid var(--divider-color,rgba(127,127,127,.35));border-radius:7px;outline:none;background:var(--secondary-background-color,#18242c);color:var(--primary-text-color,#e1e1e1);font:inherit;font-weight:400}.editor-field input:focus,.editor-field select:focus{border-color:var(--primary-color,#03a9f4);box-shadow:0 0 0 1px var(--primary-color,#03a9f4)}.editor-list{display:grid;gap:10px}.editor-item{display:grid;gap:10px;padding:12px;border-radius:9px;background:color-mix(in srgb,var(--secondary-background-color,#18242c) 80%,transparent)}.editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-item-head strong{font-size:.86rem}.editor-item-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-button{min-height:34px;padding:0 11px;border:1px solid var(--primary-color,#03a9f4);border-radius:7px;background:transparent;color:var(--primary-color,#03a9f4);font:inherit;font-size:.78rem;font-weight:650;cursor:pointer}.editor-button:hover{background:color-mix(in srgb,var(--primary-color,#03a9f4) 12%,transparent)}.editor-button.danger{border-color:var(--error-color,#db4437);color:var(--error-color,#db4437)}.editor-button.secondary{border-color:var(--divider-color,rgba(127,127,127,.35));color:var(--primary-text-color,#e1e1e1)}.editor-empty{padding:10px;border:1px dashed var(--divider-color,rgba(127,127,127,.35));border-radius:8px;color:var(--secondary-text-color,#888);font-size:.8rem;text-align:center}.uplink-fields{padding:10px;border-left:2px solid var(--primary-color,#03a9f4);background:color-mix(in srgb,var(--primary-color,#03a9f4) 5%,transparent)}@media(max-width:600px){.editor-grid{grid-template-columns:1fr}.editor-header{flex-direction:column}.editor-section{padding:12px}}",
+].join("");
+
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -55,9 +60,312 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value || {}));
 }
 
+class UbiquitiNetworkDashboardEditor extends HTMLElement {
+  constructor() {
+    super();
+    this._root = this.attachShadow({ mode: "open" });
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._rendered) this._render();
+  }
+
+  setConfig(config) {
+    this._config = clone(config || {});
+    this._config.title = this._config.title || "UniFi Network";
+    this._config.theme = this._config.theme || "auto";
+    this._config.access_points = Array.isArray(this._config.access_points) ? this._config.access_points : [];
+    this._config.switches = Array.isArray(this._config.switches) ? this._config.switches : [];
+    this._render();
+  }
+
+  _emitConfigChanged() {
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      detail: { config: clone(this._config) },
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
+  _entityList() {
+    const list = document.createElement("datalist");
+    list.id = "unifi-dashboard-entities";
+    Object.entries((this._hass && this._hass.states) || {}).sort(([left], [right]) => left.localeCompare(right)).forEach(([entityId, state]) => {
+      const option = document.createElement("option");
+      option.value = entityId;
+      option.label = (state.attributes && state.attributes.friendly_name) || entityId;
+      list.append(option);
+    });
+    return list;
+  }
+
+  _switchList() {
+    const list = document.createElement("datalist");
+    list.id = "unifi-dashboard-switches";
+    this._config.switches.forEach((switchConfig) => {
+      if (!switchConfig.name) return;
+      const option = document.createElement("option");
+      option.value = switchConfig.name;
+      list.append(option);
+    });
+    return list;
+  }
+
+  _field(labelText, value, options = {}) {
+    const field = element("label", "editor-field");
+    field.append(element("span", "", labelText));
+    const control = document.createElement(options.options ? "select" : "input");
+    if (options.options) {
+      options.options.forEach(([optionValue, optionLabel]) => {
+        const option = document.createElement("option");
+        option.value = optionValue;
+        option.textContent = optionLabel;
+        option.selected = String(value || "") === optionValue;
+        control.append(option);
+      });
+    } else {
+      control.type = options.type || "text";
+      control.value = value === undefined || value === null ? "" : String(value);
+      if (options.placeholder) control.placeholder = options.placeholder;
+      if (options.entity) control.setAttribute("list", "unifi-dashboard-entities");
+      if (options.switchName) control.setAttribute("list", "unifi-dashboard-switches");
+      if (options.type === "number") {
+        control.min = "1";
+        control.step = "1";
+      }
+    }
+    control.dataset.editorKey = options.key || "";
+    control.dataset.editorKind = options.kind || "general";
+    if (options.index !== undefined) control.dataset.editorIndex = String(options.index);
+    if (options.switchIndex !== undefined) control.dataset.editorSwitchIndex = String(options.switchIndex);
+    if (options.portIndex !== undefined) control.dataset.editorPortIndex = String(options.portIndex);
+    if (options.bandIndex !== undefined) control.dataset.editorBandIndex = String(options.bandIndex);
+    if (options.type === "number") control.dataset.valueType = "number";
+    field.append(control);
+    return field;
+  }
+
+  _button(label, action, options = {}) {
+    const button = element("button", "editor-button" + (options.kind ? " " + options.kind : ""), label);
+    button.type = "button";
+    button.dataset.editorAction = action;
+    if (options.index !== undefined) button.dataset.editorIndex = String(options.index);
+    if (options.switchIndex !== undefined) button.dataset.editorSwitchIndex = String(options.switchIndex);
+    if (options.portIndex !== undefined) button.dataset.editorPortIndex = String(options.portIndex);
+    if (options.bandIndex !== undefined) button.dataset.editorBandIndex = String(options.bandIndex);
+    return button;
+  }
+
+  _section(title, description) {
+    const section = element("section", "editor-section");
+    const head = element("div", "editor-section-head");
+    const copy = document.createElement("div");
+    copy.append(element("h3", "", title), element("p", "", description));
+    head.append(copy);
+    section.append(head);
+    return section;
+  }
+
+  _apEditor(ap, index) {
+    const item = element("article", "editor-item");
+    const head = element("div", "editor-item-head");
+    head.append(element("strong", "", "Access Point " + (index + 1)), this._button("Entfernen", "remove-ap", { index, kind: "danger" }));
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Name", ap.name, { kind: "ap", index, key: "name", placeholder: "z. B. Wohnzimmer AP" }),
+      this._field("Modell", ap.model, { kind: "ap", index, key: "model", placeholder: "z. B. U7 Pro" }),
+      this._field("Status-Entität", ap.status_entity || ap.entity, { kind: "ap", index, key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("Clients-Entität", ap.clients_entity || ap.clients, { kind: "ap", index, key: "clients_entity", entity: true, placeholder: "sensor..." })
+    );
+    const uplink = element("div", "uplink-fields editor-grid");
+    uplink.append(
+      this._field("Uplink-Switch", ap.uplink && ap.uplink.switch, { kind: "ap", index, key: "uplink.switch", switchName: true, placeholder: "Switch auswählen" }),
+      this._field("Uplink-Port", ap.uplink && ap.uplink.port, { kind: "ap", index, key: "uplink.port", type: "number", placeholder: "z. B. 7" })
+    );
+    const bands = Array.isArray(ap.bands) ? ap.bands : [];
+    const bandList = element("div", "editor-list");
+    if (bands.length) bands.forEach((band, bandIndex) => bandList.append(this._bandEditor(band, index, bandIndex)));
+    else bandList.append(element("div", "editor-empty", "Keine Band-Metriken konfiguriert."));
+    const actions = element("div", "editor-item-actions");
+    actions.append(this._button("Band-Metrik hinzufügen", "add-band", { index, kind: "secondary" }));
+    item.append(head, grid, uplink, element("strong", "", "Band-Metriken (optional)"), bandList, actions);
+    return item;
+  }
+
+  _bandEditor(band, apIndex, bandIndex) {
+    const item = element("article", "editor-item");
+    const head = element("div", "editor-item-head");
+    head.append(element("strong", "", "Band " + (bandIndex + 1)), this._button("Entfernen", "remove-band", { index: apIndex, bandIndex, kind: "danger" }));
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Bezeichnung", band.label, { kind: "band", index: apIndex, bandIndex, key: "label", placeholder: "z. B. 5 GHz" }),
+      this._field("Client-Entität", band.entity, { kind: "band", index: apIndex, bandIndex, key: "entity", entity: true, placeholder: "sensor..." })
+    );
+    item.append(head, grid);
+    return item;
+  }
+
+  _portEditor(port, switchIndex, portIndex) {
+    const item = element("article", "editor-item");
+    const head = element("div", "editor-item-head");
+    head.append(element("strong", "", "Port " + (port.number || portIndex + 1)), this._button("Entfernen", "remove-port", { switchIndex, portIndex, kind: "danger" }));
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Portnummer", port.number, { kind: "port", switchIndex, portIndex, key: "number", type: "number" }),
+      this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "z. B. Access Point" }),
+      this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+      this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
+      this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
+    );
+    item.append(head, grid);
+    return item;
+  }
+
+  _switchEditor(switchConfig, index) {
+    const item = element("article", "editor-item");
+    const head = element("div", "editor-item-head");
+    head.append(element("strong", "", "Switch " + (index + 1)), this._button("Entfernen", "remove-switch", { index, kind: "danger" }));
+    const grid = element("div", "editor-grid");
+    grid.append(
+      this._field("Name", switchConfig.name, { kind: "switch", index, key: "name", placeholder: "z. B. Heizungsraum" }),
+      this._field("Modell", switchConfig.model, { kind: "switch", index, key: "model", placeholder: "z. B. USW Lite 8 PoE" }),
+      this._field("Status-Entität", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." })
+    );
+    const uplink = element("div", "uplink-fields editor-grid");
+    uplink.append(
+      this._field("Ziel-Switch", switchConfig.uplink && switchConfig.uplink.switch, { kind: "switch", index, key: "uplink.switch", switchName: true, placeholder: "Switch auswählen" }),
+      this._field("Ziel-Port", switchConfig.uplink && switchConfig.uplink.port, { kind: "switch", index, key: "uplink.port", type: "number", placeholder: "z. B. 3" }),
+      this._field("Eigener Uplink-Port", switchConfig.uplink && (switchConfig.uplink.local_port || switchConfig.uplink.source_port), { kind: "switch", index, key: "uplink.local_port", type: "number", placeholder: "z. B. 1" })
+    );
+    const ports = Array.isArray(switchConfig.ports) ? switchConfig.ports : [];
+    const portList = element("div", "editor-list");
+    if (ports.length) ports.forEach((port, portIndex) => portList.append(this._portEditor(port, index, portIndex)));
+    else portList.append(element("div", "editor-empty", "Noch keine Ports hinzugefügt."));
+    const actions = element("div", "editor-item-actions");
+    actions.append(this._button("Port hinzufügen", "add-port", { switchIndex: index, kind: "secondary" }));
+    item.append(head, grid, uplink, element("strong", "", "Ports"), portList, actions);
+    return item;
+  }
+
+  _editorTarget(control) {
+    const kind = control.dataset.editorKind;
+    if (kind === "ap") return this._config.access_points[Number(control.dataset.editorIndex)];
+    if (kind === "band") {
+      const ap = this._config.access_points[Number(control.dataset.editorIndex)];
+      return ap && ap.bands && ap.bands[Number(control.dataset.editorBandIndex)];
+    }
+    if (kind === "switch") return this._config.switches[Number(control.dataset.editorIndex)];
+    if (kind === "port") {
+      const switchConfig = this._config.switches[Number(control.dataset.editorSwitchIndex)];
+      return switchConfig && switchConfig.ports && switchConfig.ports[Number(control.dataset.editorPortIndex)];
+    }
+    return this._config;
+  }
+
+  _updateValue(control) {
+    const target = this._editorTarget(control);
+    const key = control.dataset.editorKey;
+    if (!target || !key) return;
+    const value = control.dataset.valueType === "number" ? (control.value === "" ? undefined : Number(control.value)) : control.value;
+    const [group, property] = key.split(".");
+    if (property) {
+      if (value === undefined || value === "") {
+        if (target[group]) {
+          delete target[group][property];
+          if (!Object.keys(target[group]).length) delete target[group];
+        }
+      } else {
+        target[group] = target[group] || {};
+        target[group][property] = value;
+      }
+    } else if (value === undefined || value === "") {
+      delete target[group];
+    } else {
+      target[group] = value;
+    }
+    this._emitConfigChanged();
+  }
+
+  _handleAction(button) {
+    const action = button.dataset.editorAction;
+    const index = Number(button.dataset.editorIndex);
+    const switchIndex = Number(button.dataset.editorSwitchIndex);
+    const portIndex = Number(button.dataset.editorPortIndex);
+    const bandIndex = Number(button.dataset.editorBandIndex);
+    if (action === "add-ap") this._config.access_points.push({ name: "Neuer Access Point" });
+    if (action === "remove-ap") this._config.access_points.splice(index, 1);
+    if (action === "add-band") {
+      const bands = this._config.access_points[index].bands || (this._config.access_points[index].bands = []);
+      bands.push({ label: "Neues Band" });
+    }
+    if (action === "remove-band") this._config.access_points[index].bands.splice(bandIndex, 1);
+    if (action === "add-switch") this._config.switches.push({ name: "Neuer Switch", ports: [] });
+    if (action === "remove-switch") this._config.switches.splice(index, 1);
+    if (action === "add-port") {
+      const ports = this._config.switches[switchIndex].ports || (this._config.switches[switchIndex].ports = []);
+      const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
+      ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+    }
+    if (action === "remove-port") this._config.switches[switchIndex].ports.splice(portIndex, 1);
+    this._emitConfigChanged();
+    this._render();
+  }
+
+  _render() {
+    if (!this._config) return;
+    this._rendered = true;
+    this._root.replaceChildren();
+    this._root.append(element("style", "", EDITOR_STYLE));
+    const editor = element("div", "editor");
+    const header = element("div", "editor-header");
+    const headerCopy = document.createElement("div");
+    headerCopy.append(element("h2", "", "Ubiquiti Network Dashboard"), element("p", "", "Geräte, Ports und deren Uplinks direkt im visuellen Editor konfigurieren."));
+    header.append(headerCopy);
+    const general = this._section("Allgemein", "Titel und Farbdarstellung der Karte.");
+    const generalGrid = element("div", "editor-grid");
+    generalGrid.append(
+      this._field("Titel", this._config.title, { key: "title", placeholder: "UniFi Network" }),
+      this._field("Theme", this._config.theme, { key: "theme", options: [["auto", "Automatisch"], ["dark", "Dunkel"], ["light", "Hell"]] })
+    );
+    general.append(generalGrid);
+    const aps = this._section("Access Points", "Der Uplink verbindet einen AP mit einem Port eines Switches.");
+    const apList = element("div", "editor-list");
+    if (this._config.access_points.length) this._config.access_points.forEach((ap, index) => apList.append(this._apEditor(ap, index)));
+    else apList.append(element("div", "editor-empty", "Noch keine Access Points hinzugefügt."));
+    const apActions = element("div", "editor-item-actions");
+    apActions.append(this._button("Access Point hinzufügen", "add-ap"));
+    aps.append(apList, apActions);
+    const switches = this._section("Switches", "Ports und optionale Switch-zu-Switch-Uplinks konfigurieren.");
+    const switchList = element("div", "editor-list");
+    if (this._config.switches.length) this._config.switches.forEach((switchConfig, index) => switchList.append(this._switchEditor(switchConfig, index)));
+    else switchList.append(element("div", "editor-empty", "Noch keine Switches hinzugefügt."));
+    const switchActions = element("div", "editor-item-actions");
+    switchActions.append(this._button("Switch hinzufügen", "add-switch"));
+    switches.append(switchList, switchActions);
+    editor.append(header, general, aps, switches, this._entityList(), this._switchList());
+    this._root.append(editor);
+    if (this._listenersAttached) return;
+    this._listenersAttached = true;
+    this._root.addEventListener("input", (event) => this._updateValue(event.target));
+    this._root.addEventListener("change", (event) => {
+      if (event.target && event.target.tagName === "SELECT") this._updateValue(event.target);
+    });
+    this._root.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-editor-action]");
+      if (button) this._handleAction(button);
+    });
+  }
+}
+
 class UbiquitiNetworkDashboard extends HTMLElement {
   static getStubConfig() {
     return { title: "UniFi Network", access_points: [], switches: [] };
+  }
+
+  static getConfigElement() {
+    return document.createElement(EDITOR_TYPE);
   }
 
   setConfig(config) {
@@ -415,6 +723,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   }
 }
 
+if (!customElements.get(EDITOR_TYPE)) customElements.define(EDITOR_TYPE, UbiquitiNetworkDashboardEditor);
 if (!customElements.get(CARD_TYPE)) customElements.define(CARD_TYPE, UbiquitiNetworkDashboard);
 window.customCards = window.customCards || [];
 if (!window.customCards.some((card) => card.type === CARD_TYPE)) {

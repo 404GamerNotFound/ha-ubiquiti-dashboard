@@ -19,6 +19,7 @@ Netzwerktopologie dar.
 - Farbige Uplink-Linien zwischen AP und Switch-Port
 - Responsive Darstellung, Home-Assistant-Theme-Variablen und keine externen
   Abhängigkeiten
+- Nativer Lovelace-UI-Editor für Titel, APs, Switches, Ports und Uplinks
 - Klick auf ein Gerät oder einen Port öffnet dessen Home-Assistant-Detaildialog
 
 ## Installation über HACS
@@ -29,8 +30,9 @@ Netzwerktopologie dar.
 3. Installiere **Ubiquiti Network Dashboard**.
 4. Aktualisiere Home Assistant vollständig, einschließlich Browser-Cache.
 5. Öffne dein Dashboard, füge eine Karte hinzu und wähle
-   **Ubiquiti Network Dashboard**. Die Entitäten werden über den YAML-Editor
-   der Karte hinterlegt.
+   **Ubiquiti Network Dashboard**. Im visuellen Editor lassen sich Entitäten,
+   Geräte, Ports und Uplinks konfigurieren; der YAML-Modus bleibt ebenfalls
+   verfügbar.
 
 HACS registriert die Ressource automatisch. Bei einer manuellen Installation
 ist die Modulressource:
