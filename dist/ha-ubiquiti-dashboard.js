@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.3.0";
+const CARD_VERSION = "1.3.1";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -31,7 +31,7 @@ const STYLE = [
   ".device-name{max-width:100%;overflow:hidden;color:var(--net-text);font-size:.96rem;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.model{margin-top:3px;color:var(--net-muted);font-size:.72rem}.client-count{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--net-muted);font-size:.72rem}.client-count ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.client-count strong{color:var(--net-text);font-size:.9rem}.band-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:7px;color:var(--net-muted);font-size:.68rem}.band-metrics strong{color:var(--net-green)}",
   ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}",
   ".switches{position:relative;z-index:1;display:grid;gap:16px;margin-top:46px}.switch-node{border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
-  ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port small{color:#66818a;font-size:.62rem}",
+  ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;min-height:.78rem}.port small{color:#66818a;font-size:.62rem}.port small.poe-power{color:#946e20;font-weight:750}",
   ".empty-ports{grid-column:1/-1;padding:15px;color:#5e7780;text-align:center;font-size:.78rem}.empty-state{display:flex;align-items:center;gap:16px;margin:20px;padding:28px;border:1px dashed var(--net-border);border-radius:16px;color:var(--net-muted)}.empty-state h2{margin:0 0 5px;color:var(--net-text);font-size:1rem}.empty-state p{max-width:480px;margin:0;font-size:.82rem;line-height:1.5}.empty-icon{display:grid;place-items:center;flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:rgba(38,213,251,.13)}.empty-icon ha-icon{width:25px;height:25px}",
   "footer{display:flex;justify-content:space-between;gap:12px;padding:10px 20px 13px;border-top:1px solid var(--net-border);color:var(--net-muted);font-size:.66rem}.legend{display:flex;align-items:center;gap:5px}.legend i{margin-left:5px;width:6px;height:6px}",
   "@container (max-width:680px){.access-points{grid-template-columns:repeat(auto-fit,minmax(220px,280px))}}",
@@ -217,6 +217,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
       this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
       this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("PoE-Leistungs-Entität", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
       this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
     );
     item.append(head, grid);
@@ -429,6 +430,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         add(port.status_entity || port.entity);
         add(port.speed_entity || port.speed);
         add(port.poe_entity || port.poe);
+        add(port.poe_power_entity || port.poe_power);
       });
     });
     return [...entityIds].map((entityId) => {
@@ -474,6 +476,17 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (!Number.isFinite(numeric)) return value;
     if (numeric >= 1000) return (numeric / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Gbit/s";
     return numeric.toLocaleString("de-DE", { maximumFractionDigits: 0 }) + " Mbit/s";
+  }
+
+  _poePower(entityId) {
+    const state = this._state(entityId);
+    if (!state || OFFLINE.has(String(state.state).toLowerCase())) return "";
+    const value = String(state.state);
+    const unit = state.attributes && state.attributes.unit_of_measurement;
+    if (unit) return value + " " + unit;
+    const numeric = Number.parseFloat(value.replace(",", "."));
+    if (!Number.isFinite(numeric)) return value;
+    return numeric.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " W";
   }
 
   _name(entityId, fallback) {
@@ -579,7 +592,14 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (port.icon) label.append(icon(port.icon));
     label.append(element("span", "", port.name || this._name(entityId, "Nicht belegt")));
     portButton.append(connector, label);
-    if (port.speed_entity || port.speed) portButton.append(element("small", "", this._speed(port.speed_entity || port.speed)));
+    const speed = this._speed(port.speed_entity || port.speed);
+    const poePower = this._poePower(port.poe_power_entity || port.poe_power);
+    if (speed || poePower) {
+      const metrics = element("div", "port-metrics");
+      if (speed) metrics.append(element("small", "", speed));
+      if (poePower) metrics.append(element("small", "poe-power", "⚡ " + poePower));
+      portButton.append(metrics);
+    }
     return portButton;
   }
 

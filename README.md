@@ -101,10 +101,11 @@ switches:
 | clients_entity | Entity-ID | Zustand wird als Client-Anzahl angezeigt |
 | speed_entity | Entity-ID | Optionaler Text unter einem Port, etwa 1 Gbit/s |
 | poe_entity | Entity-ID | Bei on erscheint am Port ein PoE-Symbol |
+| poe_power_entity | Entity-ID | Optionale aktuelle PoE-Leistung unter dem Port, etwa 7,90 W |
 | uplink.switch / uplink.port | Text / Zahl | Verknüpft einen AP mit einem Switch-Port |
 | uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch-Verbindung |
 
-Die kürzeren Aliasse entity, clients, poe und speed werden ebenfalls akzeptiert.
+Die kürzeren Aliasse entity, clients, poe, poe_power und speed werden ebenfalls akzeptiert.
 Die Statusauswertung behandelt on, online, connected und up als online; off,
 unavailable, unknown, disconnected und down als offline.
 
