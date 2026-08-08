@@ -1,0 +1,12 @@
+{
+  "name": "ha-ubiquiti-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A visual Home Assistant Lovelace card for UniFi access points and switches.",
+  "scripts": {
+    "build": "mkdir -p dist && cp src/ha-ubiquiti-dashboard.js dist/ha-ubiquiti-dashboard.js",
+    "check": "node --check src/ha-ubiquiti-dashboard.js && node --check dist/ha-ubiquiti-dashboard.js",
+    "prepare": "npm run build"
+  },
+  "license": "MIT"
+}

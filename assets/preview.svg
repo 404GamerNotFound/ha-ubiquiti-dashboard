@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="Ubiquiti Network Dashboard preview">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#07131d"/><stop offset="1" stop-color="#10293a"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1280" height="720" rx="28" fill="url(#bg)"/>
+  <g font-family="Arial, sans-serif">
+    <text x="62" y="72" fill="#8bdcf0" font-size="15" letter-spacing="4">NETZWERKTOPOLOGIE</text>
+    <text x="62" y="112" fill="#fff" font-size="34" font-weight="700">UniFi Network</text>
+    <text x="945" y="80" fill="#b6cbd5" font-size="16">3 APs · 1 Switch · 26 Clients</text>
+  </g>
+  <g stroke="#285166" fill="#0b1e2a" stroke-width="2">
+    <rect x="62" y="158" width="350" height="245" rx="20"/>
+    <rect x="465" y="158" width="350" height="245" rx="20"/>
+    <rect x="868" y="158" width="350" height="245" rx="20"/>
+  </g>
+  <g font-family="Arial, sans-serif" text-anchor="middle">
+    <g transform="translate(237 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
+    <g transform="translate(640 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
+    <g transform="translate(1043 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
+    <g fill="#fff" font-size="20" font-weight="700"><text x="237" y="350">Wohnzimmer AP</text><text x="640" y="350">Büro AP</text><text x="1043" y="350">Terrasse AP</text></g>
+    <g fill="#7ae6a5" font-size="15"><text x="237" y="379">12 Clients · Online</text><text x="640" y="379">8 Clients · Online</text><text x="1043" y="379">6 Clients · Online</text></g>
+  </g>
+  <g fill="none" stroke-linecap="round" stroke-width="4" filter="url(#glow)">
+    <path d="M237 403v80h130v74" stroke="#23d9fb"/>
+    <path d="M640 403v120h20v34" stroke="#a475ff"/>
+    <path d="M1043 403v80H910v74" stroke="#42e99a"/>
+  </g>
+  <g transform="translate(132 520)">
+    <rect width="1016" height="140" rx="25" fill="#d9e4e7" stroke="#fff" stroke-width="2"/>
+    <text x="46" y="54" font-family="Arial" font-size="33" font-weight="700" fill="#24404c">U</text><circle cx="91" cy="44" r="7" fill="#3ddd89"/>
+    <g transform="translate(220 41)">
+      <g fill="#10242f" stroke="#2de993" stroke-width="3"><rect width="70" height="60" rx="7"/><rect x="95" width="70" height="60" rx="7"/><rect x="190" width="70" height="60" rx="7"/><rect x="285" width="70" height="60" rx="7"/><rect x="380" width="70" height="60" rx="7"/><rect x="475" width="70" height="60" rx="7"/><rect x="570" width="70" height="60" rx="7"/></g>
+      <g fill="#54e69b"><circle cx="12" cy="12" r="5"/><circle cx="107" cy="12" r="5"/><circle cx="202" cy="12" r="5"/><circle cx="297" cy="12" r="5"/><circle cx="392" cy="12" r="5"/><circle cx="487" cy="12" r="5"/><circle cx="582" cy="12" r="5"/></g>
+    </g>
+  </g>
+</svg>

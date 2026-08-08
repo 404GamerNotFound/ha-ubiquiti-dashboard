@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ubiquiti Network Dashboard – Vorschau</title>
+    <style>
+      body { max-width: 1280px; margin: 0 auto; padding: 24px; background: #12202a; font-family: system-ui, sans-serif; }
+      ha-icon { display: inline-grid; place-items: center; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <ha-ubiquiti-dashboard></ha-ubiquiti-dashboard>
+    <script type="module">
+      customElements.define("ha-icon", class extends HTMLElement {
+        connectedCallback() { this.textContent = "◈"; }
+      });
+      import "../src/ha-ubiquiti-dashboard.js";
+      const card = document.querySelector("ha-ubiquiti-dashboard");
+      card.hass = {
+        states: {
+          "binary_sensor.wz_ap": { state: "on", attributes: { friendly_name: "Wohnzimmer AP" } },
+          "sensor.wz_clients": { state: "12", attributes: {} },
+          "sensor.wz_band_24": { state: "3", attributes: {} },
+          "sensor.wz_band_5": { state: "9", attributes: {} },
+          "binary_sensor.office_ap": { state: "on", attributes: { friendly_name: "Büro AP" } },
+          "sensor.office_clients": { state: "8", attributes: {} },
+          "binary_sensor.garden_ap": { state: "off", attributes: { friendly_name: "Garten AP" } },
+          "sensor.garden_clients": { state: "0", attributes: {} },
+          "binary_sensor.usw_living": { state: "on", attributes: {} },
+          "binary_sensor.port_1": { state: "on", attributes: {} },
+          "sensor.port_1_speed": { state: "1 Gbit/s", attributes: {} },
+          "binary_sensor.port_6": { state: "on", attributes: {} },
+          "binary_sensor.port_6_poe": { state: "on", attributes: {} },
+          "binary_sensor.port_8": { state: "on", attributes: {} },
+          "binary_sensor.port_8_poe": { state: "on", attributes: {} },
+          "binary_sensor.port_7": { state: "off", attributes: {} }
+        }
+      };
+      card.setConfig({
+        title: "Mein Zuhause",
+        access_points: [
+          { name: "Wohnzimmer AP", model: "U6+", status_entity: "binary_sensor.wz_ap", clients_entity: "sensor.wz_clients", bands: [{ label: "2,4 GHz", entity: "sensor.wz_band_24" }, { label: "5 GHz", entity: "sensor.wz_band_5" }], uplink: { switch: "USW Wohnzimmer", port: 8 } },
+          { name: "Büro AP", model: "U6 Pro", status_entity: "binary_sensor.office_ap", clients_entity: "sensor.office_clients", uplink: { switch: "USW Wohnzimmer", port: 6 } },
+          { name: "Garten AP", model: "AC Mesh", status_entity: "binary_sensor.garden_ap", clients_entity: "sensor.garden_clients" }
+        ],
+        switches: [{
+          name: "USW Wohnzimmer",
+          model: "USW Lite 8 PoE",
+          status_entity: "binary_sensor.usw_living",
+          ports: [
+            { number: 1, name: "Home Assistant", status_entity: "binary_sensor.port_1", speed_entity: "sensor.port_1_speed" },
+            { number: 6, name: "Büro AP", status_entity: "binary_sensor.port_6", poe_entity: "binary_sensor.port_6_poe" },
+            { number: 7, name: "NAS", status_entity: "binary_sensor.port_7" },
+            { number: 8, name: "Wohnzimmer AP", status_entity: "binary_sensor.port_8", poe_entity: "binary_sensor.port_8_poe" }
+          ]
+        }]
+      });
+    </script>
+  </body>
+</html>
