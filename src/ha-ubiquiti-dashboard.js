@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.10.0";
+const CARD_VERSION = "1.11.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -188,37 +188,37 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   _apEditor(ap, index) {
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
-    head.append(element("strong", "", "Access Point " + (index + 1)), this._button("Entfernen", "remove-ap", { index, kind: "danger" }));
+    head.append(element("strong", "", "Access Point " + (index + 1)), this._button("Remove", "remove-ap", { index, kind: "danger" }));
     const grid = element("div", "editor-grid");
     grid.append(
-      this._field("Name", ap.name, { kind: "ap", index, key: "name", placeholder: "z. B. Wohnzimmer AP" }),
-      this._field("Modell", ap.model, { kind: "ap", index, key: "model", placeholder: "z. B. U7 Pro" }),
-      this._field("Status-Entität", ap.status_entity || ap.entity, { kind: "ap", index, key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
-      this._field("Clients-Entität", ap.clients_entity || ap.clients, { kind: "ap", index, key: "clients_entity", entity: true, placeholder: "sensor..." })
+      this._field("Name", ap.name, { kind: "ap", index, key: "name", placeholder: "e.g. Living Room AP" }),
+      this._field("Model", ap.model, { kind: "ap", index, key: "model", placeholder: "e.g. U7 Pro" }),
+      this._field("Status Entity", ap.status_entity || ap.entity, { kind: "ap", index, key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("Clients Entity", ap.clients_entity || ap.clients, { kind: "ap", index, key: "clients_entity", entity: true, placeholder: "sensor..." })
     );
     const uplink = element("div", "uplink-fields editor-grid");
     uplink.append(
-      this._field("Uplink-Switch", ap.uplink && ap.uplink.switch, { kind: "ap", index, key: "uplink.switch", switchName: true, placeholder: "Switch auswählen" }),
-      this._field("Uplink-Port", ap.uplink && ap.uplink.port, { kind: "ap", index, key: "uplink.port", type: "number", placeholder: "z. B. 7" })
+      this._field("Uplink Switch", ap.uplink && ap.uplink.switch, { kind: "ap", index, key: "uplink.switch", switchName: true, placeholder: "Select switch" }),
+      this._field("Uplink Port", ap.uplink && ap.uplink.port, { kind: "ap", index, key: "uplink.port", type: "number", placeholder: "e.g. 7" })
     );
     const bands = Array.isArray(ap.bands) ? ap.bands : [];
     const bandList = element("div", "editor-list");
     if (bands.length) bands.forEach((band, bandIndex) => bandList.append(this._bandEditor(band, index, bandIndex)));
-    else bandList.append(element("div", "editor-empty", "Keine Band-Metriken konfiguriert."));
+    else bandList.append(element("div", "editor-empty", "No band metrics configured."));
     const actions = element("div", "editor-item-actions");
-    actions.append(this._button("Band-Metrik hinzufügen", "add-band", { index, kind: "secondary" }));
-    item.append(head, grid, uplink, element("strong", "", "Band-Metriken (optional)"), bandList, actions);
+    actions.append(this._button("Add band metric", "add-band", { index, kind: "secondary" }));
+    item.append(head, grid, uplink, element("strong", "", "Band metrics (optional)"), bandList, actions);
     return item;
   }
 
   _bandEditor(band, apIndex, bandIndex) {
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
-    head.append(element("strong", "", "Band " + (bandIndex + 1)), this._button("Entfernen", "remove-band", { index: apIndex, bandIndex, kind: "danger" }));
+    head.append(element("strong", "", "Band " + (bandIndex + 1)), this._button("Remove", "remove-band", { index: apIndex, bandIndex, kind: "danger" }));
     const grid = element("div", "editor-grid");
     grid.append(
-      this._field("Bezeichnung", band.label, { kind: "band", index: apIndex, bandIndex, key: "label", placeholder: "z. B. 5 GHz" }),
-      this._field("Client-Entität", band.entity, { kind: "band", index: apIndex, bandIndex, key: "entity", entity: true, placeholder: "sensor..." })
+      this._field("Label", band.label, { kind: "band", index: apIndex, bandIndex, key: "label", placeholder: "e.g. 5 GHz" }),
+      this._field("Client Entity", band.entity, { kind: "band", index: apIndex, bandIndex, key: "entity", entity: true, placeholder: "sensor..." })
     );
     item.append(head, grid);
     return item;
@@ -236,20 +236,20 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     toggle.dataset.editorPortIndex = String(portIndex);
     toggle.setAttribute("aria-expanded", String(expanded));
     toggle.append(icon(expanded ? "chevron-down" : "chevron-right"), element("strong", "", "Port " + (port.number || portIndex + 1) + (port.name ? " · " + port.name : "")));
-    head.append(toggle, this._button("Entfernen", "remove-port", { switchIndex, portIndex, kind: "danger" }));
+    head.append(toggle, this._button("Remove", "remove-port", { switchIndex, portIndex, kind: "danger" }));
     item.append(head);
     if (expanded) {
       const grid = element("div", "editor-grid");
       grid.append(
-        this._field("Portnummer", port.number, { kind: "port", switchIndex, portIndex, key: "number", type: "number" }),
-        this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "z. B. Access Point" }),
-        this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
-        this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
-        this._field("RX-Entität", port.rx_entity || port.rx, { kind: "port", switchIndex, portIndex, key: "rx_entity", entity: true, placeholder: "sensor..." }),
-        this._field("TX-Entität", port.tx_entity || port.tx, { kind: "port", switchIndex, portIndex, key: "tx_entity", entity: true, placeholder: "sensor..." }),
-        this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
-        this._field("PoE-Leistungs-Entität", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
-        this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
+        this._field("Port Number", port.number, { kind: "port", switchIndex, portIndex, key: "number", type: "number" }),
+        this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "e.g. Access Point" }),
+        this._field("Status Entity", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+        this._field("Speed Entity", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
+        this._field("RX Entity", port.rx_entity || port.rx, { kind: "port", switchIndex, portIndex, key: "rx_entity", entity: true, placeholder: "sensor..." }),
+        this._field("TX Entity", port.tx_entity || port.tx, { kind: "port", switchIndex, portIndex, key: "tx_entity", entity: true, placeholder: "sensor..." }),
+        this._field("PoE Entity", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
+        this._field("PoE Power Entity", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
+        this._field("Icon (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "e.g. server" })
       );
       item.append(grid);
     }
@@ -259,36 +259,36 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   _switchEditor(switchConfig, index) {
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
-    head.append(element("strong", "", "Switch " + (index + 1)), this._button("Entfernen", "remove-switch", { index, kind: "danger" }));
+    head.append(element("strong", "", "Switch " + (index + 1)), this._button("Remove", "remove-switch", { index, kind: "danger" }));
     const grid = element("div", "editor-grid");
     grid.append(
-      this._field("Name", switchConfig.name, { kind: "switch", index, key: "name", placeholder: "z. B. Heizungsraum" }),
-      this._field("Modell", switchConfig.model, { kind: "switch", index, key: "model", placeholder: "z. B. USW Lite 8 PoE" }),
-      this._field("Status-Entität", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Gruppe / Bereich", switchConfig.group || switchConfig.area, { kind: "switch", index, key: "group", placeholder: "z. B. Dachgeschoss" }),
-      this._field("Startansicht", switchConfig.collapsed ? "true" : "false", { kind: "switch", index, key: "collapsed", valueType: "boolean", options: [["false", "Ausgeklappt"], ["true", "Eingeklappt"]] }),
-      this._field("Breite Desktop (%)", switchConfig.width, { kind: "switch", index, key: "width", type: "number", placeholder: "z. B. 50" }),
-      this._field("Breite Mobil (%)", switchConfig.width_mobile, { kind: "switch", index, key: "width_mobile", type: "number", placeholder: "leer = volle Breite" })
+      this._field("Name", switchConfig.name, { kind: "switch", index, key: "name", placeholder: "e.g. Utility Room" }),
+      this._field("Model", switchConfig.model, { kind: "switch", index, key: "model", placeholder: "e.g. USW Lite 8 PoE" }),
+      this._field("Status Entity", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Group / Area", switchConfig.group || switchConfig.area, { kind: "switch", index, key: "group", placeholder: "e.g. Attic" }),
+      this._field("Initial View", switchConfig.collapsed ? "true" : "false", { kind: "switch", index, key: "collapsed", valueType: "boolean", options: [["false", "Expanded"], ["true", "Collapsed"]] }),
+      this._field("Desktop Width (%)", switchConfig.width, { kind: "switch", index, key: "width", type: "number", placeholder: "e.g. 50" }),
+      this._field("Mobile Width (%)", switchConfig.width_mobile, { kind: "switch", index, key: "width_mobile", type: "number", placeholder: "empty = full width" })
     );
     const poeOverview = element("div", "uplink-fields editor-grid");
     poeOverview.append(
-      this._field("PoE-Budget-Entität", switchConfig.poe_budget_entity, { kind: "switch", index, key: "poe_budget_entity", entity: true, placeholder: "sensor..." }),
-      this._field("PoE-Budget (W)", switchConfig.poe_budget, { kind: "switch", index, key: "poe_budget", type: "number", placeholder: "z. B. 60" }),
-      this._field("PoE-Gesamtverbrauch-Entität", switchConfig.poe_usage_entity || switchConfig.poe_usage, { kind: "switch", index, key: "poe_usage_entity", entity: true, placeholder: "sensor..." })
+      this._field("PoE Budget Entity", switchConfig.poe_budget_entity, { kind: "switch", index, key: "poe_budget_entity", entity: true, placeholder: "sensor..." }),
+      this._field("PoE Budget (W)", switchConfig.poe_budget, { kind: "switch", index, key: "poe_budget", type: "number", placeholder: "e.g. 60" }),
+      this._field("PoE Total Usage Entity", switchConfig.poe_usage_entity || switchConfig.poe_usage, { kind: "switch", index, key: "poe_usage_entity", entity: true, placeholder: "sensor..." })
     );
     const uplink = element("div", "uplink-fields editor-grid");
     uplink.append(
-      this._field("Ziel-Switch", switchConfig.uplink && switchConfig.uplink.switch, { kind: "switch", index, key: "uplink.switch", switchName: true, placeholder: "Switch auswählen" }),
-      this._field("Ziel-Port", switchConfig.uplink && switchConfig.uplink.port, { kind: "switch", index, key: "uplink.port", type: "number", placeholder: "z. B. 3" }),
-      this._field("Eigener Uplink-Port", switchConfig.uplink && (switchConfig.uplink.local_port || switchConfig.uplink.source_port), { kind: "switch", index, key: "uplink.local_port", type: "number", placeholder: "z. B. 1" })
+      this._field("Target Switch", switchConfig.uplink && switchConfig.uplink.switch, { kind: "switch", index, key: "uplink.switch", switchName: true, placeholder: "Select switch" }),
+      this._field("Target Port", switchConfig.uplink && switchConfig.uplink.port, { kind: "switch", index, key: "uplink.port", type: "number", placeholder: "e.g. 3" }),
+      this._field("Own Uplink Port", switchConfig.uplink && (switchConfig.uplink.local_port || switchConfig.uplink.source_port), { kind: "switch", index, key: "uplink.local_port", type: "number", placeholder: "e.g. 1" })
     );
     const ports = Array.isArray(switchConfig.ports) ? switchConfig.ports : [];
     const portList = element("div", "editor-list");
     if (ports.length) ports.forEach((port, portIndex) => portList.append(this._portEditor(port, index, portIndex)));
-    else portList.append(element("div", "editor-empty", "Noch keine Ports hinzugefügt."));
+    else portList.append(element("div", "editor-empty", "No ports added yet."));
     const actions = element("div", "editor-item-actions");
-    actions.append(this._button("Port hinzufügen", "add-port", { switchIndex: index, kind: "secondary" }));
-    item.append(head, grid, element("strong", "", "PoE-Übersicht (optional)"), poeOverview, uplink, element("strong", "", "Ports"), portList, actions);
+    actions.append(this._button("Add port", "add-port", { switchIndex: index, kind: "secondary" }));
+    item.append(head, grid, element("strong", "", "PoE overview (optional)"), poeOverview, uplink, element("strong", "", "Ports"), portList, actions);
     return item;
   }
 
@@ -303,15 +303,15 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     toggle.dataset.editorPortIndex = String(portIndex);
     toggle.setAttribute("aria-expanded", String(expanded));
     toggle.append(icon(expanded ? "chevron-down" : "chevron-right"), element("strong", "", "Port " + (port.number || portIndex + 1) + (port.name ? " · " + port.name : "")));
-    head.append(toggle, this._button("Entfernen", "remove-gateway-port", { portIndex, kind: "danger" }));
+    head.append(toggle, this._button("Remove", "remove-gateway-port", { portIndex, kind: "danger" }));
     item.append(head);
     if (expanded) {
       const grid = element("div", "editor-grid");
       grid.append(
-        this._field("Portnummer", port.number, { kind: "gateway-port", portIndex, key: "number", type: "number" }),
-        this._field("Name", port.name, { kind: "gateway-port", portIndex, key: "name", placeholder: "z. B. Core Switch" }),
-        this._field("Status-Entität", port.status_entity || port.entity, { kind: "gateway-port", portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
-        this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "gateway-port", portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." })
+        this._field("Port Number", port.number, { kind: "gateway-port", portIndex, key: "number", type: "number" }),
+        this._field("Name", port.name, { kind: "gateway-port", portIndex, key: "name", placeholder: "e.g. Core Switch" }),
+        this._field("Status Entity", port.status_entity || port.entity, { kind: "gateway-port", portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+        this._field("Speed Entity", port.speed_entity || port.speed, { kind: "gateway-port", portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." })
       );
       item.append(grid);
     }
@@ -320,31 +320,31 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
 
   _gatewayEditor() {
     const gateway = this._config.gateway;
-    const section = this._section("Internet-Gateway", "Optionale WAN-Ansicht unterhalb der Switches. Switches können ihren Uplink auf den Gateway-Namen setzen.");
+    const section = this._section("Internet Gateway", "Optional WAN view below the switches. Switches can point their uplink at the gateway's name.");
     if (!gateway) {
       const actions = element("div", "editor-item-actions");
-      actions.append(this._button("Gateway hinzufügen", "add-gateway"));
-      section.append(element("div", "editor-empty", "Kein Gateway konfiguriert."), actions);
+      actions.append(this._button("Add gateway", "add-gateway"));
+      section.append(element("div", "editor-empty", "No gateway configured."), actions);
       return section;
     }
     const grid = element("div", "editor-grid");
     grid.append(
-      this._field("Name", gateway.name, { kind: "gateway", key: "name", placeholder: "z. B. Internet-Gateway" }),
-      this._field("Modell", gateway.model, { kind: "gateway", key: "model", placeholder: "z. B. UDM Pro" }),
-      this._field("Status-Entität", gateway.status_entity || gateway.entity, { kind: "gateway", key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
-      this._field("WAN-IP-Entität", gateway.wan_ip_entity, { kind: "gateway", key: "wan_ip_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Download-Entität", gateway.download_entity || gateway.download, { kind: "gateway", key: "download_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Upload-Entität", gateway.upload_entity || gateway.upload, { kind: "gateway", key: "upload_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Latenz-Entität", gateway.latency_entity || gateway.latency, { kind: "gateway", key: "latency_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Clients-Entität", gateway.clients_entity || gateway.clients, { kind: "gateway", key: "clients_entity", entity: true, placeholder: "sensor..." })
+      this._field("Name", gateway.name, { kind: "gateway", key: "name", placeholder: "e.g. Internet Gateway" }),
+      this._field("Model", gateway.model, { kind: "gateway", key: "model", placeholder: "e.g. UDM Pro" }),
+      this._field("Status Entity", gateway.status_entity || gateway.entity, { kind: "gateway", key: "status_entity", entity: true, placeholder: "binary_sensor..." }),
+      this._field("WAN IP Entity", gateway.wan_ip_entity, { kind: "gateway", key: "wan_ip_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Download Entity", gateway.download_entity || gateway.download, { kind: "gateway", key: "download_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Upload Entity", gateway.upload_entity || gateway.upload, { kind: "gateway", key: "upload_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Latency Entity", gateway.latency_entity || gateway.latency, { kind: "gateway", key: "latency_entity", entity: true, placeholder: "sensor..." }),
+      this._field("Clients Entity", gateway.clients_entity || gateway.clients, { kind: "gateway", key: "clients_entity", entity: true, placeholder: "sensor..." })
     );
     const ports = Array.isArray(gateway.ports) ? gateway.ports : [];
     const portList = element("div", "editor-list");
     if (ports.length) ports.forEach((port, portIndex) => portList.append(this._gatewayPortEditor(port, portIndex)));
-    else portList.append(element("div", "editor-empty", "Noch keine LAN-Ports hinzugefügt."));
+    else portList.append(element("div", "editor-empty", "No LAN ports added yet."));
     const actions = element("div", "editor-item-actions");
-    actions.append(this._button("LAN-Port hinzufügen", "add-gateway-port", { kind: "secondary" }), this._button("Gateway entfernen", "remove-gateway", { kind: "danger" }));
-    section.append(grid, element("strong", "", "LAN-Ports (optional, für Switch-Uplinks)"), portList, actions);
+    actions.append(this._button("Add LAN port", "add-gateway-port", { kind: "secondary" }), this._button("Remove gateway", "remove-gateway", { kind: "danger" }));
+    section.append(grid, element("strong", "", "LAN ports (optional, for switch uplinks)"), portList, actions);
     return section;
   }
 
@@ -497,7 +497,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       configChanged = true;
     }
     if (action === "add-ap") {
-      this._config.access_points.push({ name: "Neuer Access Point" });
+      this._config.access_points.push({ name: "New Access Point" });
       configChanged = true;
     }
     if (action === "remove-ap") {
@@ -506,7 +506,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     }
     if (action === "add-band") {
       const bands = this._config.access_points[index].bands || (this._config.access_points[index].bands = []);
-      bands.push({ label: "Neues Band" });
+      bands.push({ label: "New Band" });
       configChanged = true;
     }
     if (action === "remove-band") {
@@ -514,7 +514,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       configChanged = true;
     }
     if (action === "add-switch") {
-      this._config.switches.push({ name: "Neuer Switch", ports: [] });
+      this._config.switches.push({ name: "New Switch", ports: [] });
       configChanged = true;
     }
     if (action === "remove-switch") {
@@ -524,7 +524,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     if (action === "add-port") {
       const ports = this._config.switches[switchIndex].ports || (this._config.switches[switchIndex].ports = []);
       const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
-      ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      ports.push({ number: nextNumber, name: "Unassigned" });
       this._expandedPorts.add("switch:" + switchIndex + ":" + (ports.length - 1));
       configChanged = true;
     }
@@ -533,7 +533,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       configChanged = true;
     }
     if (action === "add-gateway") {
-      this._config.gateway = { name: "Internet-Gateway" };
+      this._config.gateway = { name: "Internet Gateway" };
       configChanged = true;
     }
     if (action === "remove-gateway") {
@@ -543,7 +543,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     if (action === "add-gateway-port") {
       const ports = this._config.gateway.ports || (this._config.gateway.ports = []);
       const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
-      ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      ports.push({ number: nextNumber, name: "Unassigned" });
       this._expandedPorts.add("gateway:" + (ports.length - 1));
       configChanged = true;
     }
@@ -563,47 +563,47 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const editor = element("div", "editor");
     const header = element("div", "editor-header");
     const headerCopy = document.createElement("div");
-    headerCopy.append(element("h2", "", "Ubiquiti Network Dashboard"), element("p", "", "Geräte, Ports und deren Uplinks direkt im visuellen Editor konfigurieren."));
+    headerCopy.append(element("h2", "", "Ubiquiti Network Dashboard"), element("p", "", "Configure devices, ports, and their uplinks directly in the visual editor."));
     header.append(headerCopy);
-    const general = this._section("Allgemein", "Titel und Farbdarstellung der Karte.");
+    const general = this._section("General", "Title and color scheme of the card.");
     const generalGrid = element("div", "editor-grid");
     generalGrid.append(
-      this._field("Titel", this._config.title, { key: "title", placeholder: "UniFi Network" }),
-      this._field("Theme", this._config.theme, { key: "theme", options: [["auto", "Automatisch"], ["dark", "Dunkel"], ["light", "Hell"]] })
+      this._field("Title", this._config.title, { key: "title", placeholder: "UniFi Network" }),
+      this._field("Theme", this._config.theme, { key: "theme", options: [["auto", "Auto"], ["dark", "Dark"], ["light", "Light"]] })
     );
     general.append(generalGrid);
-    const discovery = this._section("Automatische Erkennung", "Durchsucht vorhandene Home-Assistant-Entitäten und erstellt unverbindliche Vorschläge.");
+    const discovery = this._section("Automatic Discovery", "Scans existing Home Assistant entities and creates non-binding suggestions.");
     const discoveryList = element("div", "editor-list");
     if (this._discovery) {
       const discoveredSwitches = this._discovery.switches || [];
       const discoveredAccessPoints = this._discovery.accessPoints || [];
       if (!discoveredSwitches.length && !discoveredAccessPoints.length) {
-        discoveryList.append(element("div", "editor-empty", "Keine passenden UniFi-Entitäten gefunden. Prüfe, ob die UniFi-Integration Entitäten bereitstellt."));
+        discoveryList.append(element("div", "editor-empty", "No matching UniFi entities found. Check whether the UniFi integration provides entities."));
       } else {
-        if (discoveredSwitches.length) discoveryList.append(element("div", "editor-empty", "Switches: " + discoveredSwitches.map((item) => item.name + " (" + item.ports.length + " Ports)").join(", ")));
+        if (discoveredSwitches.length) discoveryList.append(element("div", "editor-empty", "Switches: " + discoveredSwitches.map((item) => item.name + " (" + item.ports.length + " ports)").join(", ")));
         if (discoveredAccessPoints.length) discoveryList.append(element("div", "editor-empty", "Access Points: " + discoveredAccessPoints.map((item) => item.name).join(", ")));
       }
     } else {
-      discoveryList.append(element("div", "editor-empty", "Die Erkennung verändert deine Konfiguration erst, nachdem du passende Vorschläge übernimmst."));
+      discoveryList.append(element("div", "editor-empty", "Discovery only changes your configuration once you accept matching suggestions."));
     }
     const discoveryActions = element("div", "editor-item-actions");
-    discoveryActions.append(this._button("Entitäten analysieren", "scan-entities", { kind: "secondary" }));
-    if (this._discovery && this._discovery.switches.length) discoveryActions.append(this._button(this._discovery.switches.length + " Switches übernehmen", "accept-switches"));
-    if (this._discovery && this._discovery.accessPoints.length) discoveryActions.append(this._button(this._discovery.accessPoints.length + " APs übernehmen", "accept-access-points"));
+    discoveryActions.append(this._button("Scan entities", "scan-entities", { kind: "secondary" }));
+    if (this._discovery && this._discovery.switches.length) discoveryActions.append(this._button("Accept " + this._discovery.switches.length + " switches", "accept-switches"));
+    if (this._discovery && this._discovery.accessPoints.length) discoveryActions.append(this._button("Accept " + this._discovery.accessPoints.length + " APs", "accept-access-points"));
     discovery.append(discoveryList, discoveryActions);
-    const aps = this._section("Access Points", "Der Uplink verbindet einen AP mit einem Port eines Switches.");
+    const aps = this._section("Access Points", "The uplink connects an AP to a port on a switch.");
     const apList = element("div", "editor-list");
     if (this._config.access_points.length) this._config.access_points.forEach((ap, index) => apList.append(this._apEditor(ap, index)));
-    else apList.append(element("div", "editor-empty", "Noch keine Access Points hinzugefügt."));
+    else apList.append(element("div", "editor-empty", "No access points added yet."));
     const apActions = element("div", "editor-item-actions");
-    apActions.append(this._button("Access Point hinzufügen", "add-ap"));
+    apActions.append(this._button("Add access point", "add-ap"));
     aps.append(apList, apActions);
-    const switches = this._section("Switches", "Ports und optionale Switch-zu-Switch-Uplinks konfigurieren.");
+    const switches = this._section("Switches", "Configure ports and optional switch-to-switch uplinks.");
     const switchList = element("div", "editor-list");
     if (this._config.switches.length) this._config.switches.forEach((switchConfig, index) => switchList.append(this._switchEditor(switchConfig, index)));
-    else switchList.append(element("div", "editor-empty", "Noch keine Switches hinzugefügt."));
+    else switchList.append(element("div", "editor-empty", "No switches added yet."));
     const switchActions = element("div", "editor-item-actions");
-    switchActions.append(this._button("Switch hinzufügen", "add-switch"));
+    switchActions.append(this._button("Add switch", "add-switch"));
     switches.append(switchList, switchActions);
     editor.append(header, general, discovery, aps, switches, this._gatewayEditor(), this._entityList(), this._switchList());
     this._root.append(editor);
@@ -630,10 +630,10 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config || typeof config !== "object") throw new Error("Eine Kartenkonfiguration wird benötigt.");
-    if (config.access_points && !Array.isArray(config.access_points)) throw new Error("access_points muss eine Liste sein.");
-    if (config.switches && !Array.isArray(config.switches)) throw new Error("switches muss eine Liste sein.");
-    if (config.gateway && typeof config.gateway !== "object") throw new Error("gateway muss ein Objekt sein.");
+    if (!config || typeof config !== "object") throw new Error("A card configuration is required.");
+    if (config.access_points && !Array.isArray(config.access_points)) throw new Error("access_points must be a list.");
+    if (config.switches && !Array.isArray(config.switches)) throw new Error("switches must be a list.");
+    if (config.gateway && typeof config.gateway !== "object") throw new Error("gateway must be an object.");
     const nextConfig = Object.assign({ title: "UniFi Network", theme: "auto", access_points: [], switches: [] }, clone(config));
     nextConfig.access_points = Array.isArray(nextConfig.access_points) ? nextConfig.access_points : [];
     nextConfig.switches = Array.isArray(nextConfig.switches) ? nextConfig.switches : [];
@@ -735,7 +735,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const online = this._online(entityId);
     if (online === true) return { key: "online", label: "Online" };
     if (online === false) return { key: "offline", label: "Offline" };
-    return { key: "unknown", label: "Nicht verbunden" };
+    return { key: "unknown", label: "Not Connected" };
   }
 
   _value(entityId, fallback) {
@@ -793,8 +793,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (unit) return value + " " + unit;
     const numeric = Number.parseFloat(value.replace(",", "."));
     if (!Number.isFinite(numeric)) return value;
-    if (numeric >= 1000) return (numeric / 1000).toLocaleString("de-DE", { maximumFractionDigits: 1 }) + " Gbit/s";
-    return numeric.toLocaleString("de-DE", { maximumFractionDigits: 0 }) + " Mbit/s";
+    if (numeric >= 1000) return (numeric / 1000).toLocaleString("en-US", { maximumFractionDigits: 1 }) + " Gbit/s";
+    return numeric.toLocaleString("en-US", { maximumFractionDigits: 0 }) + " Mbit/s";
   }
 
   _poePower(entityId) {
@@ -805,7 +805,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (unit) return value + " " + unit;
     const numeric = Number.parseFloat(value.replace(",", "."));
     if (!Number.isFinite(numeric)) return value;
-    return numeric.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " W";
+    return numeric.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " W";
   }
 
   _traffic(entityId) {
@@ -861,7 +861,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (rx === null && tx === null) return null;
     const ratio = Math.max(rx || 0, tx || 0) / speed;
     const color = ratio >= 0.85 ? "red" : ratio >= 0.6 ? "amber" : "green";
-    return { color, title: "Auslastung: " + Math.round(ratio * 100) + "%" };
+    return { color, title: "Load: " + Math.round(ratio * 100) + "%" };
   }
 
   _latency(entityId) {
@@ -884,7 +884,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   }
 
   _formatWatts(value) {
-    return value.toLocaleString("de-DE", { maximumFractionDigits: 2 }) + " W";
+    return value.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " W";
   }
 
   _switchPoeSummary(switchConfig, ports) {
@@ -1005,7 +1005,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     connector.append(element("i", "port-led"), element("b", "", port.number || portIndex + 1));
     if (this._online(port.poe_entity || port.poe) === true) {
       const poe = element("em");
-      poe.title = "PoE aktiv";
+      poe.title = "PoE active";
       poe.append(icon("flash"));
       connector.append(poe);
     }
@@ -1025,9 +1025,9 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       connector.append(dot);
     }
     const label = element("span", "port-name");
-    label.title = port.name || this._name(entityId, "Nicht belegt");
+    label.title = port.name || this._name(entityId, "Unassigned");
     if (port.icon) label.append(icon(port.icon));
-    label.append(element("span", "", port.name || this._name(entityId, "Nicht belegt")));
+    label.append(element("span", "", port.name || this._name(entityId, "Unassigned")));
     portButton.append(connector, label);
     const speedEntity = port.speed_entity || port.speed;
     const rxEntity = port.rx_entity || port.rx;
@@ -1083,7 +1083,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     title.append(switchIcon, titleText);
     const activePorts = ports.filter((port) => this._online(port.status_entity || port.entity) === true).length;
     const summary = element("div", "switch-summary");
-    summary.append(this._badge(health), document.createTextNode(activePorts + "/" + ports.length + " aktive Ports"));
+    summary.append(this._badge(health), document.createTextNode(activePorts + "/" + ports.length + " active ports"));
     const hasPoeSummary = switchConfig.poe_budget_entity || switchConfig.poe_budget !== undefined || switchConfig.poe_usage_entity || switchConfig.poe_usage || ports.some((port) => port.poe_power_entity || port.poe_power);
     if (hasPoeSummary) {
       const poeSummary = element("span", "poe-summary", this._switchPoeSummary(switchConfig, ports));
@@ -1092,14 +1092,14 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     }
     const collapse = element("button", "collapse-toggle");
     collapse.type = "button";
-    collapse.title = collapsed ? "Switch ausklappen" : "Switch einklappen";
+    collapse.title = collapsed ? "Expand switch" : "Collapse switch";
     collapse.setAttribute("aria-expanded", String(!collapsed));
     collapse.append(icon(collapsed ? "chevron-down" : "chevron-up"));
     collapse.addEventListener("click", () => {
       const nextCollapsed = !node.classList.contains("collapsed");
       node.classList.toggle("collapsed", nextCollapsed);
       this._collapsedSwitches.set(stateKey, nextCollapsed);
-      collapse.title = nextCollapsed ? "Switch ausklappen" : "Switch einklappen";
+      collapse.title = nextCollapsed ? "Expand switch" : "Collapse switch";
       collapse.setAttribute("aria-expanded", String(!nextCollapsed));
       collapse.replaceChildren(icon(nextCollapsed ? "chevron-down" : "chevron-up"));
       requestAnimationFrame(() => this._drawWires());
@@ -1113,7 +1113,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     brand.append(element("b", "", "U"), element("span", "", "NETWORK"));
     const portsNode = element("div", "ports");
     if (!ports.length) {
-      portsNode.append(element("div", "empty-ports", "Noch keine Ports konfiguriert"));
+      portsNode.append(element("div", "empty-ports", "No ports configured yet"));
     } else {
       ports.forEach((port, portIndex) => portsNode.append(this._port(port, switchConfig, index, portIndex)));
     }
@@ -1143,7 +1143,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const gatewayIcon = element("span", "switch-icon");
     gatewayIcon.append(icon("web"));
     const titleText = element("span");
-    titleText.append(element("strong", "", gateway.name || this._name(entityId, "Internet-Gateway")), element("small", "", gateway.model || "Gateway"));
+    titleText.append(element("strong", "", gateway.name || this._name(entityId, "Internet Gateway")), element("small", "", gateway.model || "Gateway"));
     title.append(gatewayIcon, titleText);
     const summary = element("div", "switch-summary");
     summary.append(this._badge(health));
@@ -1214,7 +1214,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const totalClients = this._totalClientCount();
     const header = element("div", "card-header");
     const heading = element("div");
-    heading.append(element("p", "eyebrow", "NETZWERKTOPOLOGIE"), element("h1", "", this._config.title || "UniFi Network"));
+    heading.append(element("p", "eyebrow", "NETWORK TOPOLOGY"), element("h1", "", this._config.title || "UniFi Network"));
     const stats = element("div", "header-stats");
     [[ "access-point", accessPoints.length + " APs" ], [ "switch", switches.length + " Switches" ]].forEach((stat) => {
       const chip = element("span");
@@ -1228,7 +1228,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     stats.append(clientsChip);
     if (this._config.gateway) {
       const gatewayHealth = this._health(this._config.gateway.status_entity || this._config.gateway.entity);
-      const label = gatewayHealth.key === "online" ? "Online" : gatewayHealth.key === "offline" ? "Offline" : "Unbekannt";
+      const label = gatewayHealth.key === "online" ? "Online" : gatewayHealth.key === "offline" ? "Offline" : "Unknown";
       const chip = element("span", "header-gateway-chip " + gatewayHealth.key);
       chip.append(icon("web"), document.createTextNode("Internet " + label));
       stats.append(chip);
@@ -1236,7 +1236,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const offlineCount = this._offlineDeviceCount();
     if (offlineCount > 0) {
       const alertChip = element("span", "header-alert-chip");
-      alertChip.append(icon("alert"), document.createTextNode(offlineCount + (offlineCount === 1 ? " Gerät offline" : " Geräte offline")));
+      alertChip.append(icon("alert"), document.createTextNode(offlineCount + (offlineCount === 1 ? " device offline" : " devices offline")));
       stats.append(alertChip);
     }
     header.append(heading, stats);
@@ -1247,7 +1247,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const emptyIcon = element("div", "empty-icon");
       emptyIcon.append(icon("switch"));
       const emptyText = element("div");
-      emptyText.append(element("h2", "", "Deine Netzwerkansicht ist bereit"), element("p", "", "Füge Access Points und Switches in der YAML-Konfiguration dieser Karte hinzu. Ein vollständiges Beispiel steht in der README."));
+      emptyText.append(element("h2", "", "Your network view is ready"), element("p", "", "Add access points and switches in this card's YAML configuration. A complete example is available in the README."));
       empty.append(emptyIcon, emptyText);
       card.append(empty);
     } else {
@@ -1268,7 +1268,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         } else {
           const groups = new Map();
           switches.forEach((switchConfig, index) => {
-            const groupName = String(switchConfig.group || switchConfig.area || "Weitere Geräte");
+            const groupName = String(switchConfig.group || switchConfig.area || "Other Devices");
             if (!groups.has(groupName)) groups.set(groupName, []);
             groups.get(groupName).push([switchConfig, index]);
           });
@@ -1290,7 +1290,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     }
     const footer = element("footer");
     const legend = element("span", "legend");
-    [[ "online", "Online" ], [ "offline", "Offline" ], [ "unknown", "Unbekannt" ]].forEach((state) => {
+    [[ "online", "Online" ], [ "offline", "Offline" ], [ "unknown", "Unknown" ]].forEach((state) => {
       legend.append(element("i", state[0]), document.createTextNode(state[1]));
     });
     footer.append(legend, element("span", "", "Ubiquiti Network Dashboard"));
@@ -1384,8 +1384,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
           if (toSafe) (toEdge === "top" ? topRects : bottomRects).push(targetRect);
           else { topRects.push(targetRect); bottomRects.push(targetRect); }
         }
-        const firstTop = Math.min(y1, y2, ...topRects.map((rect) => rect.top - bounds.top)) - 12;
-        const lastBottom = Math.max(y1, y2, ...bottomRects.map((rect) => rect.bottom - bounds.top)) + 12;
+        const firstTop = (topRects.length ? Math.min(...topRects.map((rect) => rect.top - bounds.top)) : Math.min(y1, y2)) - 12;
+        const lastBottom = (bottomRects.length ? Math.max(...bottomRects.map((rect) => rect.bottom - bounds.top)) : Math.max(y1, y2)) + 12;
         const leftRail = Math.max(8, Math.min(...railRects.map((rect) => rect.left - bounds.left)) - 12);
         const rightRail = Math.min(bounds.width - 8, Math.max(...railRects.map((rect) => rect.right - bounds.left)) + 12);
         const rail = Math.abs(x1 - leftRail) + Math.abs(x2 - leftRail) <= Math.abs(x1 - rightRail) + Math.abs(x2 - rightRail) ? leftRail : rightRail;
@@ -1423,7 +1423,7 @@ if (!window.customCards.some((card) => card.type === CARD_TYPE)) {
   window.customCards.push({
     type: CARD_TYPE,
     name: "Ubiquiti Network Dashboard",
-    description: "Visualisiert UniFi Access Points, Switches und Port-Verbindungen.",
+    description: "Visualizes UniFi access points, switches, and port connections.",
     documentationURL: "https://github.com/404GamerNotFound/ha-ubiquiti-dashboard",
   });
 }

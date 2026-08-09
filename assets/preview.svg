@@ -5,7 +5,7 @@
   </defs>
   <rect width="1280" height="720" rx="28" fill="url(#bg)"/>
   <g font-family="Arial, sans-serif">
-    <text x="62" y="72" fill="#8bdcf0" font-size="15" letter-spacing="4">NETZWERKTOPOLOGIE</text>
+    <text x="62" y="72" fill="#8bdcf0" font-size="15" letter-spacing="4">NETWORK TOPOLOGY</text>
     <text x="62" y="112" fill="#fff" font-size="34" font-weight="700">UniFi Network</text>
     <text x="945" y="80" fill="#b6cbd5" font-size="16">3 APs · 1 Switch · 26 Clients</text>
   </g>
@@ -18,7 +18,7 @@
     <g transform="translate(237 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
     <g transform="translate(640 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
     <g transform="translate(1043 256)"><circle r="63" fill="#e6f5f8" stroke="#16d9fc" stroke-width="4"/><circle r="30" fill="none" stroke="#45e991" stroke-width="3"/><text y="10" fill="#173444" font-size="28">U</text></g>
-    <g fill="#fff" font-size="20" font-weight="700"><text x="237" y="350">Wohnzimmer AP</text><text x="640" y="350">Büro AP</text><text x="1043" y="350">Terrasse AP</text></g>
+    <g fill="#fff" font-size="20" font-weight="700"><text x="237" y="350">Living Room AP</text><text x="640" y="350">Office AP</text><text x="1043" y="350">Patio AP</text></g>
     <g fill="#7ae6a5" font-size="15"><text x="237" y="379">12 Clients · Online</text><text x="640" y="379">8 Clients · Online</text><text x="1043" y="379">6 Clients · Online</text></g>
   </g>
   <g fill="none" stroke-linecap="round" stroke-width="4" filter="url(#glow)">

@@ -1,116 +1,114 @@
 # Ubiquiti Network Dashboard
 
-Eine moderne, lokal laufende Lovelace-Karte für Home Assistant. Sie stellt
-UniFi Access Points, Switches, aktive Ports und deren Uplinks als kompakte
-Netzwerktopologie dar.
+A modern, locally running Lovelace card for Home Assistant. It displays UniFi
+access points, switches, active ports, and their uplinks as a compact network
+topology.
 
-![Vorschau des Ubiquiti Network Dashboard](assets/preview.svg)
+![Preview of the Ubiquiti Network Dashboard](assets/preview.svg)
 
-> Diese Dashboard-Karte nutzt bestehende UniFi- oder Ubiquiti-Entitäten. Sie
-> ersetzt weder die offizielle UniFi-Integration noch verbindet sie sich direkt
-> mit einem Controller.
+> This dashboard card uses existing UniFi or Ubiquiti entities. It does not
+> replace the official UniFi integration and does not connect directly to a
+> controller.
 
-## Funktionen
+## Features
 
-- Access Points mit Online-Status, Modell, Client-Anzahl und optionalen
-  Band-Metriken
-- Switches als Geräteansicht mit konfigurierten Ports, Link-Status, PoE und
-  optionaler Geschwindigkeit
-- Optionaler Internet-Gateway-Knoten (Router/USG/UDM) mit WAN-Status,
-  Download-/Upload-Durchsatz, Latenz und WAN-IP, an den Switches per Uplink
-  andocken können
-- Farbige Uplink-Linien zwischen AP und Switch-Port, die bei konfigurierten
-  Geschwindigkeits- und Durchsatz-Entitäten automatisch als Auslastungs-Ampel
-  (grün/gelb/rot) eingefärbt werden
-- Sammel-Warnhinweis im Kartenkopf, sobald ein AP, Switch oder Gateway offline
-  ist
-- Responsive Darstellung, Home-Assistant-Theme-Variablen und keine externen
-  Abhängigkeiten
-- Nativer Lovelace-UI-Editor für Titel, APs, Switches, Ports und Uplinks
-- Automatische Entitätserkennung mit übernehmbaren AP-, Switch- und
-  Port-Vorschlägen
-- Klick auf ein Gerät oder einen Port öffnet dessen Home-Assistant-Detaildialog
+- Access points with online status, model, client count, and optional band
+  metrics
+- Switches as a device view with configured ports, link status, PoE, and
+  optional speed
+- Optional internet gateway node (router/USG/UDM) with WAN status,
+  download/upload throughput, latency, and WAN IP, which switches can dock
+  onto via uplink
+- Colored uplink lines between AP and switch port that automatically color
+  themselves as a load traffic light (green/yellow/red) when speed and
+  throughput entities are configured
+- Aggregate warning banner in the card header as soon as an AP, switch, or
+  gateway goes offline
+- Responsive layout, Home Assistant theme variables, and no external
+  dependencies
+- Native Lovelace UI editor for title, APs, switches, ports, and uplinks
+- Automatic entity discovery with adoptable AP, switch, and port suggestions
+- Clicking a device or port opens its Home Assistant more-info dialog
 
-## Installation über HACS
+## Installation via HACS
 
-1. Öffne **HACS → Dashboards** und wähle **Custom repository**.
-2. Füge https://github.com/404GamerNotFound/ha-ubiquiti-dashboard als Typ
-   **Dashboard** hinzu.
-3. Installiere **Ubiquiti Network Dashboard**.
-4. Aktualisiere Home Assistant vollständig, einschließlich Browser-Cache.
-5. Öffne dein Dashboard, füge eine Karte hinzu und wähle
-   **Ubiquiti Network Dashboard**. Im visuellen Editor lassen sich Entitäten,
-   Geräte, Ports und Uplinks konfigurieren; der YAML-Modus bleibt ebenfalls
-   verfügbar.
+1. Open **HACS → Dashboards** and select **Custom repository**.
+2. Add https://github.com/404GamerNotFound/ha-ubiquiti-dashboard as type
+   **Dashboard**.
+3. Install **Ubiquiti Network Dashboard**.
+4. Fully refresh Home Assistant, including the browser cache.
+5. Open your dashboard, add a card, and select
+   **Ubiquiti Network Dashboard**. Entities, devices, ports, and uplinks can
+   be configured in the visual editor; YAML mode also remains available.
 
-HACS registriert die Ressource automatisch. Bei einer manuellen Installation
-ist die Modulressource:
+HACS registers the resource automatically. For a manual installation, the
+module resource is:
 
 ~~~yaml
 url: /hacsfiles/ha-ubiquiti-dashboard/ha-ubiquiti-dashboard.js
 type: module
 ~~~
 
-## Automatische Erkennung
+## Automatic Discovery
 
-Im visuellen Editor steht unter **Automatische Erkennung** die Aktion
-**Entitäten analysieren** zur Verfügung. Sie durchsucht die vorhandenen
-Home-Assistant-Entitäten nach den üblichen UniFi-Portmustern und schlägt
-Switches, ihre Ports sowie erkannte Access Points vor. Die Vorschläge werden
-erst durch **übernehmen** in die Kartenkonfiguration geschrieben; Uplink-Ziele
-werden dabei bewusst nicht geraten und anschließend im Editor ergänzt.
+The visual editor offers the **Scan entities** action under
+**Automatic Discovery**. It searches existing Home Assistant entities for
+common UniFi port patterns and suggests switches, their ports, and detected
+access points. The suggestions are only written into the card configuration
+once you **accept** them; uplink targets are deliberately not guessed and
+should be added afterward in the editor.
 
-## Schnellstart
+## Quick Start
 
-Ersetze die Beispiel-Entitäts-IDs durch die Entitäten deiner Installation:
+Replace the example entity IDs with the entities from your installation:
 
 ~~~yaml
 type: custom:ha-ubiquiti-dashboard
-title: Mein Netzwerk
-theme: auto # auto, dark oder light
+title: My Network
+theme: auto # auto, dark, or light
 access_points:
-  - name: Wohnzimmer AP
+  - name: Living Room AP
     model: U6+
-    status_entity: binary_sensor.wohnzimmer_ap_status
-    clients_entity: sensor.wohnzimmer_ap_clients
+    status_entity: binary_sensor.living_room_ap_status
+    clients_entity: sensor.living_room_ap_clients
     bands:
-      - label: 2,4 GHz
-        entity: sensor.wohnzimmer_ap_24ghz_clients
+      - label: 2.4 GHz
+        entity: sensor.living_room_ap_24ghz_clients
       - label: 5 GHz
-        entity: sensor.wohnzimmer_ap_5ghz_clients
+        entity: sensor.living_room_ap_5ghz_clients
     uplink:
-      switch: USW Wohnzimmer
+      switch: USW Living Room
       port: 8
-  - name: Büro AP
+  - name: Office AP
     model: U6 Pro
-    status_entity: binary_sensor.buero_ap_status
-    clients_entity: sensor.buero_ap_clients
+    status_entity: binary_sensor.office_ap_status
+    clients_entity: sensor.office_ap_clients
     uplink:
-      switch: USW Wohnzimmer
+      switch: USW Living Room
       port: 6
 switches:
-  - name: USW Wohnzimmer
+  - name: USW Living Room
     model: USW Lite 8 PoE
-    status_entity: binary_sensor.usw_wohnzimmer_status
+    status_entity: binary_sensor.usw_living_room_status
     uplink:
-      switch: Internet-Gateway
+      switch: Internet Gateway
       port: 1
       local_port: 1
     ports:
       - number: 1
-        name: Internet-Gateway
-        status_entity: binary_sensor.usw_wohnzimmer_port_1
-        speed_entity: sensor.usw_wohnzimmer_port_1_speed
+        name: Internet Gateway
+        status_entity: binary_sensor.usw_living_room_port_1
+        speed_entity: sensor.usw_living_room_port_1_speed
       - number: 6
-        name: Büro AP
-        status_entity: binary_sensor.usw_wohnzimmer_port_6
-        poe_entity: binary_sensor.usw_wohnzimmer_port_6_poe
+        name: Office AP
+        status_entity: binary_sensor.usw_living_room_port_6
+        poe_entity: binary_sensor.usw_living_room_port_6_poe
       - number: 8
-        name: Wohnzimmer AP
-        status_entity: binary_sensor.usw_wohnzimmer_port_8
-        poe_entity: binary_sensor.usw_wohnzimmer_port_8_poe
+        name: Living Room AP
+        status_entity: binary_sensor.usw_living_room_port_8
+        poe_entity: binary_sensor.usw_living_room_port_8_poe
 gateway:
-  name: Internet-Gateway
+  name: Internet Gateway
   model: UDM Pro
   status_entity: binary_sensor.udm_wan_status
   wan_ip_entity: sensor.udm_wan_ip
@@ -119,149 +117,148 @@ gateway:
   latency_entity: sensor.udm_wan_latency
   ports:
     - number: 1
-      name: USW Wohnzimmer
+      name: USW Living Room
 ~~~
 
-## Konfigurationsreferenz
+## Configuration Reference
 
-| Schlüssel | Typ | Beschreibung |
+| Key | Type | Description |
 | --- | --- | --- |
-| title | Text | Titel der Karte; Standard: UniFi Network |
-| theme | auto, dark, light | Farbmodus der Karte |
-| access_points | Liste | APs, die oberhalb der Switches erscheinen |
-| switches | Liste | Switches mit den darzustellenden Ports |
-| group / area | Text | Optionale Gruppierung von Switches, etwa nach Etage oder Raum |
-| collapsed | Boolean | Blendet die Portansicht des Switches beim Laden ein oder aus |
-| width | Zahl (10–100) | Breite eines Switches in Prozent der Zeile auf breiten Bildschirmen; passende Switches stehen dann nebeneinander |
-| width_mobile | Zahl (10–100) | Wie width, gilt aber nur auf schmalen Bildschirmen (Container ≤ 680 px); ohne Angabe volle Breite |
-| status_entity | Entity-ID | Optionaler Online-Status eines AP, Switches oder Ports |
-| clients_entity | Entity-ID | Zustand wird als Client-Anzahl angezeigt |
-| speed_entity | Entity-ID | Optionaler Text unter einem Port, etwa 1 Gbit/s |
-| rx_entity / tx_entity | Entity-ID | Optionaler aktueller Empfangs- bzw. Sendendurchsatz eines Ports |
-| poe_entity | Entity-ID | Bei on erscheint am Port ein PoE-Symbol |
-| poe_power_entity | Entity-ID | Optionale aktuelle PoE-Leistung unter dem Port, etwa 7,90 W |
-| poe_budget_entity / poe_budget | Entity-ID / Zahl | Optionales PoE-Watt-Budget eines Switches |
-| poe_usage_entity | Entity-ID | Optionaler Gesamtverbrauch; sonst werden die PoE-Portwerte summiert |
-| uplink.switch / uplink.port | Text / Zahl | Verknüpft einen AP mit einem Switch-Port |
-| uplink.local_port | Zahl | Optionaler Quell-Port für eine Switch-zu-Switch- oder Switch-zu-Gateway-Verbindung |
-| gateway | Objekt | Optionaler Internet-Gateway-Knoten unterhalb der Switches |
-| gateway.name / gateway.model | Text | Name und Modell des Gateways, z. B. UDM Pro |
-| gateway.status_entity | Entity-ID | Online-Status der Internetverbindung (WAN) |
-| gateway.wan_ip_entity | Entity-ID | Optionale öffentliche WAN-IP als Text |
-| gateway.download_entity / gateway.upload_entity | Entity-ID | Optionaler aktueller Internet-Durchsatz |
-| gateway.latency_entity | Entity-ID | Optionale WAN-Latenz, etwa 12 ms |
-| gateway.clients_entity | Entity-ID | Optionale Gesamt-Client-Anzahl |
-| gateway.ports | Liste | Optionale LAN-Ports des Gateways, gleiches Schema wie Switch-Ports |
+| title | Text | Card title; default: UniFi Network |
+| theme | auto, dark, light | Card color mode |
+| access_points | List | APs that appear above the switches |
+| switches | List | Switches with the ports to display |
+| group / area | Text | Optional grouping of switches, e.g. by floor or room |
+| collapsed | Boolean | Shows or hides the switch's port view on load |
+| width | Number (10–100) | Width of a switch as a percentage of the row on wide screens; matching switches then sit side by side |
+| width_mobile | Number (10–100) | Like width, but only applies on narrow screens (container ≤ 680 px); full width if not set |
+| status_entity | Entity ID | Optional online status of an AP, switch, or port |
+| clients_entity | Entity ID | State is displayed as the client count |
+| speed_entity | Entity ID | Optional text under a port, e.g. 1 Gbit/s |
+| rx_entity / tx_entity | Entity ID | Optional current receive/transmit throughput of a port |
+| poe_entity | Entity ID | A PoE icon appears on the port when on |
+| poe_power_entity | Entity ID | Optional current PoE power under the port, e.g. 7.90 W |
+| poe_budget_entity / poe_budget | Entity ID / Number | Optional PoE wattage budget of a switch |
+| poe_usage_entity | Entity ID | Optional total consumption; otherwise the per-port PoE values are summed |
+| uplink.switch / uplink.port | Text / Number | Links an AP to a switch port |
+| uplink.local_port | Number | Optional source port for a switch-to-switch or switch-to-gateway connection |
+| gateway | Object | Optional internet gateway node below the switches |
+| gateway.name / gateway.model | Text | Name and model of the gateway, e.g. UDM Pro |
+| gateway.status_entity | Entity ID | Online status of the internet connection (WAN) |
+| gateway.wan_ip_entity | Entity ID | Optional public WAN IP as text |
+| gateway.download_entity / gateway.upload_entity | Entity ID | Optional current internet throughput |
+| gateway.latency_entity | Entity ID | Optional WAN latency, e.g. 12 ms |
+| gateway.clients_entity | Entity ID | Optional total client count |
+| gateway.ports | List | Optional LAN ports of the gateway, same schema as switch ports |
 
-Die kürzeren Aliasse entity, clients, poe, poe_power, poe_usage, rx, tx und speed werden ebenfalls akzeptiert.
-Die Statusauswertung behandelt on, online, connected und up als online; off,
-unavailable, unknown, disconnected und down als offline. Sobald mindestens ein
-AP, Switch oder das Gateway offline ist, erscheint im Kartenkopf ein
-zusammenfassender Warnhinweis ("N Geräte offline").
+The shorter aliases entity, clients, poe, poe_power, poe_usage, rx, tx, and
+speed are also accepted. Status evaluation treats on, online, connected, and
+up as online; off, unavailable, unknown, disconnected, and down as offline.
+As soon as at least one AP, switch, or the gateway is offline, a summary
+warning appears in the card header ("N devices offline").
 
-Sind für den Ziel-Port eines Uplinks sowohl speed_entity als auch mindestens
-eine der Entitäten rx_entity oder tx_entity konfiguriert, färbt sich die
-Uplink-Leitung automatisch nach Auslastung ein: grün unter 60 %, gelb ab 60 %
-und rot ab 85 % der Portgeschwindigkeit. Bei Switch-zu-Switch- oder
-Switch-zu-Gateway-Uplinks wird zunächst der Ziel-Port ausgewertet; fehlen dort
-Werte, zählt ersatzweise der eigene local_port. Ohne passende Entitäten bleibt
-es bei der festen Farbzuordnung zur Unterscheidung mehrerer Uplinks. rx_entity
-und tx_entity werden dabei anhand ihrer unit_of_measurement (Mbit/s, Gbit/s,
-Kbit/s, MB/s, KB/s oder Byte/s) automatisch in Mbit/s umgerechnet.
+If both speed_entity and at least one of rx_entity or tx_entity are
+configured for an uplink's target port, the uplink line automatically colors
+itself by load: green below 60%, yellow from 60%, and red from 85% of the
+port speed. For switch-to-switch or switch-to-gateway uplinks, the target
+port is evaluated first; if values are missing there, the switch's own
+local_port is used instead. Without matching entities, the fixed color
+assignment is used to distinguish multiple uplinks. rx_entity and tx_entity
+are automatically converted to Mbit/s based on their unit_of_measurement
+(Mbit/s, Gbit/s, Kbit/s, MB/s, KB/s, or Byte/s).
 
-Switches mit mindestens einer group- oder area-Angabe werden im Dashboard unter
-dieser Überschrift zusammengefasst. Über die Pfeil-Schaltfläche im Kopf eines
-Switches lässt sich die Portansicht ein- und ausklappen; beim Einklappen werden
-die Leitungen zu diesem Switch ausgeblendet.
+Switches with at least one group or area value are grouped in the dashboard
+under that heading. The arrow button in a switch's header expands or
+collapses its port view; when collapsed, the lines to that switch are
+hidden.
 
 ~~~yaml
 switches:
-  - name: Heizungsraum
-    group: Keller
-  - name: Dachboden
-    group: Dachgeschoss
+  - name: Utility Room
+    group: Basement
+  - name: Attic
+    group: Upstairs
     collapsed: true
 ~~~
 
-Über width lässt sich steuern, wie viel Platz ein Switch auf breiten Bildschirmen
-einnimmt (Prozent der Zeile). Passen mehrere width-Werte in eine Zeile, stehen
-die Switches nebeneinander; reicht der Platz nicht, rutscht der nächste Switch
-automatisch in die nächste Zeile. width_mobile überschreibt diesen Wert auf
-schmalen Bildschirmen (Container ≤ 680 px) und ist ohne Angabe immer 100 %, damit
-Switches auf dem Handy nicht zu schmal werden. Die Kabelführung berücksichtigt
-nebeneinanderstehende Switches automatisch und routet Leitungen bei Bedarf um sie
-herum.
+The width property controls how much space a switch takes up on wide
+screens (percentage of the row). If multiple width values fit in one row,
+those switches sit side by side; if there isn't enough room, the next switch
+automatically wraps to the next row. width_mobile overrides this value on
+narrow screens (container ≤ 680 px) and always defaults to 100% if not set,
+so switches don't become too narrow on a phone. The wire routing
+automatically accounts for switches placed side by side and routes lines
+around them as needed.
 
 ~~~yaml
 switches:
-  - name: Keller Switch A
+  - name: Basement Switch A
     width: 50
     width_mobile: 100
-  - name: Keller Switch B
+  - name: Basement Switch B
     width: 50
     width_mobile: 100
 ~~~
 
-Ein Switch-Uplink wird am Switch selbst hinterlegt. local_port ist der Port am
-dargestellten Switch; switch und port bezeichnen den Ziel-Switch und dessen
-Ziel-Port:
+A switch uplink is defined on the switch itself. local_port is the port on
+the switch being displayed; switch and port identify the target switch and
+its target port:
 
 ~~~yaml
 switches:
-  - name: Dachboden
+  - name: Attic
     uplink:
-      switch: Heizungsraum
+      switch: Utility Room
       port: 3
       local_port: 1
 ~~~
 
-Ein optionaler gateway-Knoten stellt den Internet-Einstiegspunkt (Router,
-USG oder UDM) unterhalb der Switches dar. Switches verknüpfen sich mit ihm
-genau wie mit einem anderen Switch: switch bezieht sich dabei auf den Namen
-des Gateways.
+An optional gateway node represents the internet entry point (router, USG,
+or UDM) below the switches. Switches link to it exactly like they would to
+another switch: switch refers to the gateway's name.
 
 ~~~yaml
 gateway:
-  name: Internet-Gateway
+  name: Internet Gateway
   status_entity: binary_sensor.udm_wan_status
   ports:
     - number: 1
-      name: Heizungsraum
+      name: Utility Room
 switches:
-  - name: Heizungsraum
+  - name: Utility Room
     uplink:
-      switch: Internet-Gateway
+      switch: Internet Gateway
       port: 1
       local_port: 1
 ~~~
 
-## HACS- und Entwicklungsstandard
+## HACS and Development Standard
 
-Das Repository ist als HACS-Typ **Dashboard** aufgebaut, der im HACS-Backend
-technisch **plugin** heißt.
+The repository is set up as HACS type **Dashboard**, which is technically
+called **plugin** in the HACS backend.
 
-- hacs.json enthält Namen, installierbare Ressource, README-Darstellung und die
-  minimale Home-Assistant-Version.
-- dist/ha-ubiquiti-dashboard.js ist die installierbare, namensgleiche
-  JavaScript-Ressource.
-- Die GitHub Action prüft das Repository mit der offiziellen HACS-Validierung
-  sowie die JavaScript-Syntax bei Pushes und Pull Requests.
-- Für die Aufnahme in die HACS-Standardliste müssen auf GitHub zusätzlich eine
-  Repository-Beschreibung, passende Topics, aktivierte Issues, ein öffentliches
-  Repository und ein GitHub Release eingerichtet sein.
+- hacs.json contains the name, installable resource, README rendering, and
+  the minimum Home Assistant version.
+- dist/ha-ubiquiti-dashboard.js is the installable JavaScript resource with
+  the same name.
+- The GitHub Action checks the repository with the official HACS validation
+  and the JavaScript syntax on pushes and pull requests.
+- For inclusion in the HACS default list, a repository description,
+  matching topics, enabled issues, a public repository, and a GitHub release
+  must additionally be set up on GitHub.
 
-## Entwicklung
+## Development
 
 ~~~bash
 npm run build
 npm run check
 ~~~
 
-src/ha-ubiquiti-dashboard.js ist die Quelldatei. Der Build kopiert die
-abhängigkeitsfreie Auslieferungsdatei nach dist; diese Datei muss in Releases
-eingecheckt bleiben, damit HACS sie ohne Build-Schritt installieren kann.
+src/ha-ubiquiti-dashboard.js is the source file. The build copies the
+dependency-free distribution file to dist; this file must remain checked in
+for releases so HACS can install it without a build step.
 
-## Lizenz und Marken
+## License and Trademarks
 
-MIT. UniFi und Ubiquiti sind Marken ihrer jeweiligen Inhaber. Dieses Projekt
-steht in keiner Verbindung zu Ubiquiti Inc.
+MIT. UniFi and Ubiquiti are trademarks of their respective owners. This
+project is not affiliated with Ubiquiti Inc.
