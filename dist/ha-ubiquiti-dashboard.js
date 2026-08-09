@@ -1337,26 +1337,76 @@ class UbiquitiNetworkDashboard extends HTMLElement {
         const horizontallyInPath = right > Math.min(x1, x2) && left < Math.max(x1, x2);
         return verticallyBetween && horizontallyInPath;
       });
-      const hasPortRowAbove = (dot) => {
+      const rowExitEdge = (dot) => {
+        const port = dot.closest(".port");
+        const grid = port && port.closest(".ports");
+        if (!grid) return null;
+        const tops = [...new Set([...grid.children].map((sibling) => Math.round(sibling.getBoundingClientRect().top)))].sort((a, b) => a - b);
+        if (tops.length <= 1) return null;
+        const rowIndex = tops.indexOf(Math.round(port.getBoundingClientRect().top));
+        if (rowIndex <= 0) return null;
+        const rowsBelow = tops.length - 1 - rowIndex;
+        return rowsBelow <= rowIndex ? "bottom" : "top";
+      };
+      const crossesOtherRow = (dot, xCoord) => {
         const port = dot.closest(".port");
         const grid = port && port.closest(".ports");
         if (!grid) return false;
-        const portTop = port.getBoundingClientRect().top;
-        return [...grid.children].some((sibling) => sibling !== port && sibling.getBoundingClientRect().top < portTop - 1);
+        const ownTop = Math.round(port.getBoundingClientRect().top);
+        return [...grid.children].some((sibling) => {
+          if (sibling === port) return false;
+          const rect = sibling.getBoundingClientRect();
+          if (Math.round(rect.top) === ownTop) return false;
+          return xCoord > rect.left - bounds.left && xCoord < rect.right - bounds.left;
+        });
       };
-      const obstacleRects = intermediateNodes.map((node) => node.getBoundingClientRect());
-      if (targetNode && hasPortRowAbove(to)) obstacleRects.push(targetNode.getBoundingClientRect());
-      if (fromNode && hasPortRowAbove(from)) obstacleRects.push(fromNode.getBoundingClientRect());
+      const fromEdge = fromNode ? rowExitEdge(from) : null;
+      const toEdge = targetNode ? rowExitEdge(to) : null;
+      const fromRect = fromNode ? fromNode.getBoundingClientRect() : null;
+      const targetRect = targetNode ? targetNode.getBoundingClientRect() : null;
+      const fromSafe = !fromEdge || !crossesOtherRow(from, x2);
+      const toSafe = !toEdge || !crossesOtherRow(to, x1);
+      const needsRail = intermediateNodes.length > 0 || (fromEdge && !fromSafe) || (toEdge && !toSafe);
       const wire = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
       const color = WIRE_COLOR_KEYS.find((item) => from.classList.contains(item)) || "cyan";
       wire.setAttribute("class", "wire " + color);
-      if (obstacleRects.length) {
-        const firstTop = Math.min(y1, y2, ...obstacleRects.map((rect) => rect.top - bounds.top)) - 12;
-        const lastBottom = Math.max(y1, y2, ...obstacleRects.map((rect) => rect.bottom - bounds.top)) + 12;
-        const leftRail = Math.max(8, Math.min(...obstacleRects.map((rect) => rect.left - bounds.left)) - 12);
-        const rightRail = Math.min(bounds.width - 8, Math.max(...obstacleRects.map((rect) => rect.right - bounds.left)) + 12);
+      if (needsRail) {
+        const topRects = intermediateNodes.map((node) => node.getBoundingClientRect());
+        const bottomRects = intermediateNodes.map((node) => node.getBoundingClientRect());
+        const railRects = intermediateNodes.map((node) => node.getBoundingClientRect());
+        if (fromEdge && fromRect) {
+          railRects.push(fromRect);
+          if (fromSafe) (fromEdge === "top" ? topRects : bottomRects).push(fromRect);
+          else { topRects.push(fromRect); bottomRects.push(fromRect); }
+        }
+        if (toEdge && targetRect) {
+          railRects.push(targetRect);
+          if (toSafe) (toEdge === "top" ? topRects : bottomRects).push(targetRect);
+          else { topRects.push(targetRect); bottomRects.push(targetRect); }
+        }
+        const firstTop = Math.min(y1, y2, ...topRects.map((rect) => rect.top - bounds.top)) - 12;
+        const lastBottom = Math.max(y1, y2, ...bottomRects.map((rect) => rect.bottom - bounds.top)) + 12;
+        const leftRail = Math.max(8, Math.min(...railRects.map((rect) => rect.left - bounds.left)) - 12);
+        const rightRail = Math.min(bounds.width - 8, Math.max(...railRects.map((rect) => rect.right - bounds.left)) + 12);
         const rail = Math.abs(x1 - leftRail) + Math.abs(x2 - leftRail) <= Math.abs(x1 - rightRail) + Math.abs(x2 - rightRail) ? leftRail : rightRail;
-        wire.setAttribute("points", x1 + "," + y1 + " " + x1 + "," + firstTop + " " + rail + "," + firstTop + " " + rail + "," + lastBottom + " " + x2 + "," + lastBottom + " " + x2 + "," + y2);
+        let y1Side = fromEdge === "top" ? "top" : fromEdge === "bottom" ? "bottom" : null;
+        let y2Side = toEdge === "top" ? "top" : toEdge === "bottom" ? "bottom" : null;
+        if (!y1Side && !y2Side) y1Side = Math.abs(y1 - firstTop) <= Math.abs(y1 - lastBottom) ? "top" : "bottom";
+        if (y1Side && !y2Side) y2Side = y1Side === "top" ? "bottom" : "top";
+        if (y2Side && !y1Side) y1Side = y2Side === "top" ? "bottom" : "top";
+        if (y1Side === y2Side) y2Side = y1Side === "top" ? "bottom" : "top";
+        const y1Bound = y1Side === "top" ? firstTop : lastBottom;
+        const y2Bound = y2Side === "top" ? firstTop : lastBottom;
+        wire.setAttribute("points", x1 + "," + y1 + " " + x1 + "," + y1Bound + " " + rail + "," + y1Bound + " " + rail + "," + y2Bound + " " + x2 + "," + y2Bound + " " + x2 + "," + y2);
+      } else if (fromEdge || toEdge) {
+        let lowerBound = null;
+        let upperBound = null;
+        if (fromEdge === "bottom") lowerBound = Math.max(lowerBound ?? -Infinity, fromRect.bottom - bounds.top + 12);
+        if (fromEdge === "top") upperBound = Math.min(upperBound ?? Infinity, fromRect.top - bounds.top - 12);
+        if (toEdge === "bottom") lowerBound = Math.max(lowerBound ?? -Infinity, targetRect.bottom - bounds.top + 12);
+        if (toEdge === "top") upperBound = Math.min(upperBound ?? Infinity, targetRect.top - bounds.top - 12);
+        const bendY = lowerBound !== null && upperBound !== null ? (lowerBound <= upperBound ? (lowerBound + upperBound) / 2 : lowerBound) : (lowerBound ?? upperBound);
+        wire.setAttribute("points", x1 + "," + y1 + " " + x1 + "," + bendY + " " + x2 + "," + bendY + " " + x2 + "," + y2);
       } else {
         const middle = y1 + (y2 - y1) * 0.5;
         wire.setAttribute("points", x1 + "," + y1 + " " + x1 + "," + middle + " " + x2 + "," + middle + " " + x2 + "," + y2);
