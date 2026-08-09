@@ -4,7 +4,7 @@ A modern, locally running Lovelace card for Home Assistant. It displays UniFi
 access points, switches, active ports, and their uplinks as a compact network
 topology.
 
-![Preview of the Ubiquiti Network Dashboard](assets/preview.svg)
+![Preview of the Ubiquiti Network Dashboard](assets/preview.png)
 
 > This dashboard card uses existing UniFi or Ubiquiti entities. It does not
 > replace the official UniFi integration and does not connect directly to a
