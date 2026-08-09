@@ -132,6 +132,8 @@ gateway:
 | switches | Liste | Switches mit den darzustellenden Ports |
 | group / area | Text | Optionale Gruppierung von Switches, etwa nach Etage oder Raum |
 | collapsed | Boolean | Blendet die Portansicht des Switches beim Laden ein oder aus |
+| width | Zahl (10–100) | Breite eines Switches in Prozent der Zeile auf breiten Bildschirmen; passende Switches stehen dann nebeneinander |
+| width_mobile | Zahl (10–100) | Wie width, gilt aber nur auf schmalen Bildschirmen (Container ≤ 680 px); ohne Angabe volle Breite |
 | status_entity | Entity-ID | Optionaler Online-Status eines AP, Switches oder Ports |
 | clients_entity | Entity-ID | Zustand wird als Client-Anzahl angezeigt |
 | speed_entity | Entity-ID | Optionaler Text unter einem Port, etwa 1 Gbit/s |
@@ -179,6 +181,25 @@ switches:
   - name: Dachboden
     group: Dachgeschoss
     collapsed: true
+~~~
+
+Über width lässt sich steuern, wie viel Platz ein Switch auf breiten Bildschirmen
+einnimmt (Prozent der Zeile). Passen mehrere width-Werte in eine Zeile, stehen
+die Switches nebeneinander; reicht der Platz nicht, rutscht der nächste Switch
+automatisch in die nächste Zeile. width_mobile überschreibt diesen Wert auf
+schmalen Bildschirmen (Container ≤ 680 px) und ist ohne Angabe immer 100 %, damit
+Switches auf dem Handy nicht zu schmal werden. Die Kabelführung berücksichtigt
+nebeneinanderstehende Switches automatisch und routet Leitungen bei Bedarf um sie
+herum.
+
+~~~yaml
+switches:
+  - name: Keller Switch A
+    width: 50
+    width_mobile: 100
+  - name: Keller Switch B
+    width: 50
+    width_mobile: 100
 ~~~
 
 Ein Switch-Uplink wird am Switch selbst hinterlegt. local_port ist der Port am

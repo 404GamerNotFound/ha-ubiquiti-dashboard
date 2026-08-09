@@ -5,7 +5,7 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.8.0";
+const CARD_VERSION = "1.10.0";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
@@ -31,14 +31,14 @@ const STYLE = [
   ".ap-disc{position:relative;display:grid;place-items:center;width:78px;height:78px;margin:12px 0 9px;border:5px solid #eaf7fa;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cfe2e7);box-shadow:0 0 0 2px rgba(77,227,155,.45),0 0 22px rgba(38,213,251,.36)}.ap-disc.offline{box-shadow:0 0 0 2px rgba(255,113,132,.5),0 0 20px rgba(255,113,132,.2)}.ap-disc.unknown{box-shadow:0 0 0 2px rgba(255,201,88,.5),0 0 20px rgba(255,201,88,.2)}.ap-disc span{color:#254555;font-size:1.8rem;font-weight:300}.ap-disc i{position:absolute;right:7px;bottom:8px;width:10px;height:10px;border:2px solid #efffff;border-radius:50%;background:var(--net-green)}.ap-disc.offline i{background:var(--net-red)}.ap-disc.unknown i{background:var(--net-amber)}",
   ".device-name{max-width:100%;overflow:hidden;color:var(--net-text);font-size:.96rem;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.model{margin-top:3px;color:var(--net-muted);font-size:.72rem}.client-count{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--net-muted);font-size:.72rem}.client-count ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.client-count strong{color:var(--net-text);font-size:.9rem}.band-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:7px;color:var(--net-muted);font-size:.68rem}.band-metrics strong{color:var(--net-green)}",
   ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}.wire-dot.red{background:var(--net-red);color:var(--net-red)}",
-  ".switches{position:relative;z-index:1;display:grid;gap:16px;margin-top:46px}.switch-node{border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
+  ".switches{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:16px;margin-top:46px}.switch-node{flex:0 1 var(--switch-basis,100%);max-width:var(--switch-basis,100%);min-width:280px;border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
   ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;min-height:.78rem}.port small{color:#66818a;font-size:.62rem}.port small.poe-power{color:#946e20;font-weight:750}",
   ".empty-ports{grid-column:1/-1;padding:15px;color:#5e7780;text-align:center;font-size:.78rem}.empty-state{display:flex;align-items:center;gap:16px;margin:20px;padding:28px;border:1px dashed var(--net-border);border-radius:16px;color:var(--net-muted)}.empty-state h2{margin:0 0 5px;color:var(--net-text);font-size:1rem}.empty-state p{max-width:480px;margin:0;font-size:.82rem;line-height:1.5}.empty-icon{display:grid;place-items:center;flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:rgba(38,213,251,.13)}.empty-icon ha-icon{width:25px;height:25px}",
   "footer{display:flex;justify-content:space-between;gap:12px;padding:10px 20px 13px;border-top:1px solid var(--net-border);color:var(--net-muted);font-size:.66rem}.legend{display:flex;align-items:center;gap:5px}.legend i{margin-left:5px;width:6px;height:6px}",
-  "@container (max-width:680px){.access-points{grid-template-columns:repeat(auto-fit,minmax(220px,280px))}}",
+  "@container (max-width:680px){.access-points{grid-template-columns:repeat(auto-fit,minmax(220px,280px))}.switch-node{flex-basis:var(--switch-basis-mobile,100%);max-width:var(--switch-basis-mobile,100%)}}",
   "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
   "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
-  ".switch-group{display:grid;gap:10px}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:grid;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
+  ".switch-group{display:grid;gap:10px;flex:1 1 100%}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:flex;flex-wrap:wrap;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
   ".client-value{color:var(--net-text);font-size:.9rem;font-weight:750}.band-value{color:var(--net-green);font-weight:700}.port-metrics span{color:#66818a;font-size:.62rem}.port-metrics span.poe-power{color:#946e20;font-weight:750}",
   ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".header-gateway-chip.online{color:var(--net-green)}.header-gateway-chip.offline{color:var(--net-red)}.header-gateway-chip.unknown{color:var(--net-amber)}.header-gateway-chip ha-icon{color:inherit}",
@@ -46,7 +46,7 @@ const STYLE = [
 ].join("");
 
 const EDITOR_STYLE = [
-  ":host{display:block;color:var(--primary-text-color,#e1e1e1)}*{box-sizing:border-box}.editor{display:grid;gap:16px;padding:12px 4px;font-family:var(--primary-font-family,sans-serif)}.editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.editor-header h2{margin:0;font-size:1.1rem}.editor-header p{margin:4px 0 0;color:var(--secondary-text-color,#888);font-size:.85rem;line-height:1.4}.editor-section{display:grid;gap:12px;padding:14px;border:1px solid var(--divider-color,rgba(127,127,127,.25));border-radius:12px;background:var(--card-background-color,transparent)}.editor-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.editor-section-head h3{margin:0;font-size:.95rem}.editor-section-head p{margin:3px 0 0;color:var(--secondary-text-color,#888);font-size:.78rem}.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.editor-field{display:grid;gap:5px;min-width:0;color:var(--secondary-text-color,#888);font-size:.75rem;font-weight:600}.editor-field input,.editor-field select{width:100%;min-width:0;height:38px;padding:0 10px;border:1px solid var(--divider-color,rgba(127,127,127,.35));border-radius:7px;outline:none;background:var(--secondary-background-color,#18242c);color:var(--primary-text-color,#e1e1e1);font:inherit;font-weight:400}.editor-field input:focus,.editor-field select:focus{border-color:var(--primary-color,#03a9f4);box-shadow:0 0 0 1px var(--primary-color,#03a9f4)}.editor-list{display:grid;gap:10px}.editor-item{display:grid;gap:10px;padding:12px;border-radius:9px;background:color-mix(in srgb,var(--secondary-background-color,#18242c) 80%,transparent)}.editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-item-head strong{font-size:.86rem}.editor-item-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-button{min-height:34px;padding:0 11px;border:1px solid var(--primary-color,#03a9f4);border-radius:7px;background:transparent;color:var(--primary-color,#03a9f4);font:inherit;font-size:.78rem;font-weight:650;cursor:pointer}.editor-button:hover{background:color-mix(in srgb,var(--primary-color,#03a9f4) 12%,transparent)}.editor-button.danger{border-color:var(--error-color,#db4437);color:var(--error-color,#db4437)}.editor-button.secondary{border-color:var(--divider-color,rgba(127,127,127,.35));color:var(--primary-text-color,#e1e1e1)}.editor-empty{padding:10px;border:1px dashed var(--divider-color,rgba(127,127,127,.35));border-radius:8px;color:var(--secondary-text-color,#888);font-size:.8rem;text-align:center}.uplink-fields{padding:10px;border-left:2px solid var(--primary-color,#03a9f4);background:color-mix(in srgb,var(--primary-color,#03a9f4) 5%,transparent)}@media(max-width:600px){.editor-grid{grid-template-columns:1fr}.editor-header{flex-direction:column}.editor-section{padding:12px}}",
+  ":host{display:block;color:var(--primary-text-color,#e1e1e1)}*{box-sizing:border-box}.editor{display:grid;gap:16px;padding:12px 4px;font-family:var(--primary-font-family,sans-serif)}.editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.editor-header h2{margin:0;font-size:1.1rem}.editor-header p{margin:4px 0 0;color:var(--secondary-text-color,#888);font-size:.85rem;line-height:1.4}.editor-section{display:grid;gap:12px;padding:14px;border:1px solid var(--divider-color,rgba(127,127,127,.25));border-radius:12px;background:var(--card-background-color,transparent)}.editor-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.editor-section-head h3{margin:0;font-size:.95rem}.editor-section-head p{margin:3px 0 0;color:var(--secondary-text-color,#888);font-size:.78rem}.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.editor-field{display:grid;gap:5px;min-width:0;color:var(--secondary-text-color,#888);font-size:.75rem;font-weight:600}.editor-field input,.editor-field select{width:100%;min-width:0;height:38px;padding:0 10px;border:1px solid var(--divider-color,rgba(127,127,127,.35));border-radius:7px;outline:none;background:var(--secondary-background-color,#18242c);color:var(--primary-text-color,#e1e1e1);font:inherit;font-weight:400}.editor-field input:focus,.editor-field select:focus{border-color:var(--primary-color,#03a9f4);box-shadow:0 0 0 1px var(--primary-color,#03a9f4)}.editor-list{display:grid;gap:10px}.editor-item{display:grid;gap:10px;padding:12px;border-radius:9px;background:color-mix(in srgb,var(--secondary-background-color,#18242c) 80%,transparent)}.editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-item-head strong{font-size:.86rem}.editor-item-toggle{display:flex;align-items:center;gap:6px;min-width:0;padding:0;border:0;background:none;color:var(--primary-text-color,#e1e1e1);font:inherit;cursor:pointer;text-align:left}.editor-item-toggle ha-icon{--mdc-icon-size:18px;width:18px;height:18px;color:var(--secondary-text-color,#888);flex:0 0 auto}.editor-item-toggle strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.editor-item-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-button{min-height:34px;padding:0 11px;border:1px solid var(--primary-color,#03a9f4);border-radius:7px;background:transparent;color:var(--primary-color,#03a9f4);font:inherit;font-size:.78rem;font-weight:650;cursor:pointer}.editor-button:hover{background:color-mix(in srgb,var(--primary-color,#03a9f4) 12%,transparent)}.editor-button.danger{border-color:var(--error-color,#db4437);color:var(--error-color,#db4437)}.editor-button.secondary{border-color:var(--divider-color,rgba(127,127,127,.35));color:var(--primary-text-color,#e1e1e1)}.editor-empty{padding:10px;border:1px dashed var(--divider-color,rgba(127,127,127,.35));border-radius:8px;color:var(--secondary-text-color,#888);font-size:.8rem;text-align:center}.uplink-fields{padding:10px;border-left:2px solid var(--primary-color,#03a9f4);background:color-mix(in srgb,var(--primary-color,#03a9f4) 5%,transparent)}@media(max-width:600px){.editor-grid{grid-template-columns:1fr}.editor-header{flex-direction:column}.editor-section{padding:12px}}",
 ].join("");
 
 function element(tag, className, text) {
@@ -70,6 +70,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   constructor() {
     super();
     this._root = this.attachShadow({ mode: "open" });
+    this._expandedPorts = new Set();
   }
 
   set hass(hass) {
@@ -78,15 +79,20 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   }
 
   setConfig(config) {
-    this._config = clone(config || {});
-    this._config.title = this._config.title || "UniFi Network";
-    this._config.theme = this._config.theme || "auto";
-    this._config.access_points = Array.isArray(this._config.access_points) ? this._config.access_points : [];
-    this._config.switches = Array.isArray(this._config.switches) ? this._config.switches : [];
+    const nextConfig = clone(config || {});
+    nextConfig.title = nextConfig.title || "UniFi Network";
+    nextConfig.theme = nextConfig.theme || "auto";
+    nextConfig.access_points = Array.isArray(nextConfig.access_points) ? nextConfig.access_points : [];
+    nextConfig.switches = Array.isArray(nextConfig.switches) ? nextConfig.switches : [];
+    const signature = JSON.stringify(nextConfig);
+    this._config = nextConfig;
+    if (signature === this._configSignature) return;
+    this._configSignature = signature;
     this._render();
   }
 
   _emitConfigChanged() {
+    this._configSignature = JSON.stringify(this._config);
     this.dispatchEvent(new CustomEvent("config-changed", {
       detail: { config: clone(this._config) },
       bubbles: true,
@@ -219,22 +225,34 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   }
 
   _portEditor(port, switchIndex, portIndex) {
+    const key = "switch:" + switchIndex + ":" + portIndex;
+    const expanded = this._expandedPorts.has(key);
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
-    head.append(element("strong", "", "Port " + (port.number || portIndex + 1)), this._button("Entfernen", "remove-port", { switchIndex, portIndex, kind: "danger" }));
-    const grid = element("div", "editor-grid");
-    grid.append(
-      this._field("Portnummer", port.number, { kind: "port", switchIndex, portIndex, key: "number", type: "number" }),
-      this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "z. B. Access Point" }),
-      this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
-      this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
-      this._field("RX-Entität", port.rx_entity || port.rx, { kind: "port", switchIndex, portIndex, key: "rx_entity", entity: true, placeholder: "sensor..." }),
-      this._field("TX-Entität", port.tx_entity || port.tx, { kind: "port", switchIndex, portIndex, key: "tx_entity", entity: true, placeholder: "sensor..." }),
-      this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
-      this._field("PoE-Leistungs-Entität", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
-      this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
-    );
-    item.append(head, grid);
+    const toggle = element("button", "editor-item-toggle");
+    toggle.type = "button";
+    toggle.dataset.editorAction = "toggle-port";
+    toggle.dataset.editorSwitchIndex = String(switchIndex);
+    toggle.dataset.editorPortIndex = String(portIndex);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.append(icon(expanded ? "chevron-down" : "chevron-right"), element("strong", "", "Port " + (port.number || portIndex + 1) + (port.name ? " · " + port.name : "")));
+    head.append(toggle, this._button("Entfernen", "remove-port", { switchIndex, portIndex, kind: "danger" }));
+    item.append(head);
+    if (expanded) {
+      const grid = element("div", "editor-grid");
+      grid.append(
+        this._field("Portnummer", port.number, { kind: "port", switchIndex, portIndex, key: "number", type: "number" }),
+        this._field("Name", port.name, { kind: "port", switchIndex, portIndex, key: "name", placeholder: "z. B. Access Point" }),
+        this._field("Status-Entität", port.status_entity || port.entity, { kind: "port", switchIndex, portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+        this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "port", switchIndex, portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." }),
+        this._field("RX-Entität", port.rx_entity || port.rx, { kind: "port", switchIndex, portIndex, key: "rx_entity", entity: true, placeholder: "sensor..." }),
+        this._field("TX-Entität", port.tx_entity || port.tx, { kind: "port", switchIndex, portIndex, key: "tx_entity", entity: true, placeholder: "sensor..." }),
+        this._field("PoE-Entität", port.poe_entity || port.poe, { kind: "port", switchIndex, portIndex, key: "poe_entity", entity: true, placeholder: "binary_sensor..." }),
+        this._field("PoE-Leistungs-Entität", port.poe_power_entity || port.poe_power, { kind: "port", switchIndex, portIndex, key: "poe_power_entity", entity: true, placeholder: "sensor..." }),
+        this._field("Symbol (optional)", port.icon, { kind: "port", switchIndex, portIndex, key: "icon", placeholder: "z. B. server" })
+      );
+      item.append(grid);
+    }
     return item;
   }
 
@@ -248,7 +266,9 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       this._field("Modell", switchConfig.model, { kind: "switch", index, key: "model", placeholder: "z. B. USW Lite 8 PoE" }),
       this._field("Status-Entität", switchConfig.status_entity || switchConfig.entity, { kind: "switch", index, key: "status_entity", entity: true, placeholder: "sensor..." }),
       this._field("Gruppe / Bereich", switchConfig.group || switchConfig.area, { kind: "switch", index, key: "group", placeholder: "z. B. Dachgeschoss" }),
-      this._field("Startansicht", switchConfig.collapsed ? "true" : "false", { kind: "switch", index, key: "collapsed", valueType: "boolean", options: [["false", "Ausgeklappt"], ["true", "Eingeklappt"]] })
+      this._field("Startansicht", switchConfig.collapsed ? "true" : "false", { kind: "switch", index, key: "collapsed", valueType: "boolean", options: [["false", "Ausgeklappt"], ["true", "Eingeklappt"]] }),
+      this._field("Breite Desktop (%)", switchConfig.width, { kind: "switch", index, key: "width", type: "number", placeholder: "z. B. 50" }),
+      this._field("Breite Mobil (%)", switchConfig.width_mobile, { kind: "switch", index, key: "width_mobile", type: "number", placeholder: "leer = volle Breite" })
     );
     const poeOverview = element("div", "uplink-fields editor-grid");
     poeOverview.append(
@@ -273,17 +293,28 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   }
 
   _gatewayPortEditor(port, portIndex) {
+    const key = "gateway:" + portIndex;
+    const expanded = this._expandedPorts.has(key);
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
-    head.append(element("strong", "", "Port " + (port.number || portIndex + 1)), this._button("Entfernen", "remove-gateway-port", { portIndex, kind: "danger" }));
-    const grid = element("div", "editor-grid");
-    grid.append(
-      this._field("Portnummer", port.number, { kind: "gateway-port", portIndex, key: "number", type: "number" }),
-      this._field("Name", port.name, { kind: "gateway-port", portIndex, key: "name", placeholder: "z. B. Core Switch" }),
-      this._field("Status-Entität", port.status_entity || port.entity, { kind: "gateway-port", portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
-      this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "gateway-port", portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." })
-    );
-    item.append(head, grid);
+    const toggle = element("button", "editor-item-toggle");
+    toggle.type = "button";
+    toggle.dataset.editorAction = "toggle-gateway-port";
+    toggle.dataset.editorPortIndex = String(portIndex);
+    toggle.setAttribute("aria-expanded", String(expanded));
+    toggle.append(icon(expanded ? "chevron-down" : "chevron-right"), element("strong", "", "Port " + (port.number || portIndex + 1) + (port.name ? " · " + port.name : "")));
+    head.append(toggle, this._button("Entfernen", "remove-gateway-port", { portIndex, kind: "danger" }));
+    item.append(head);
+    if (expanded) {
+      const grid = element("div", "editor-grid");
+      grid.append(
+        this._field("Portnummer", port.number, { kind: "gateway-port", portIndex, key: "number", type: "number" }),
+        this._field("Name", port.name, { kind: "gateway-port", portIndex, key: "name", placeholder: "z. B. Core Switch" }),
+        this._field("Status-Entität", port.status_entity || port.entity, { kind: "gateway-port", portIndex, key: "status_entity", entity: true, placeholder: "switch..." }),
+        this._field("Geschwindigkeits-Entität", port.speed_entity || port.speed, { kind: "gateway-port", portIndex, key: "speed_entity", entity: true, placeholder: "sensor..." })
+      );
+      item.append(grid);
+    }
     return item;
   }
 
@@ -446,6 +477,16 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const portIndex = Number(button.dataset.editorPortIndex);
     const bandIndex = Number(button.dataset.editorBandIndex);
     let configChanged = false;
+    if (action === "toggle-port") {
+      const key = "switch:" + switchIndex + ":" + portIndex;
+      if (this._expandedPorts.has(key)) this._expandedPorts.delete(key);
+      else this._expandedPorts.add(key);
+    }
+    if (action === "toggle-gateway-port") {
+      const key = "gateway:" + portIndex;
+      if (this._expandedPorts.has(key)) this._expandedPorts.delete(key);
+      else this._expandedPorts.add(key);
+    }
     if (action === "scan-entities") this._discovery = this._discoverNetworkDevices();
     if (action === "accept-switches") {
       this._acceptDiscovery("switches");
@@ -484,6 +525,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       const ports = this._config.switches[switchIndex].ports || (this._config.switches[switchIndex].ports = []);
       const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
       ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      this._expandedPorts.add("switch:" + switchIndex + ":" + (ports.length - 1));
       configChanged = true;
     }
     if (action === "remove-port") {
@@ -502,6 +544,7 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
       const ports = this._config.gateway.ports || (this._config.gateway.ports = []);
       const nextNumber = ports.reduce((largest, port) => Math.max(largest, Number(port.number) || 0), 0) + 1;
       ports.push({ number: nextNumber, name: "Nicht zugeordnet" });
+      this._expandedPorts.add("gateway:" + (ports.length - 1));
       configChanged = true;
     }
     if (action === "remove-gateway-port") {
@@ -1005,6 +1048,22 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     return portButton;
   }
 
+  _switchWidthBasis(value) {
+    if (value === undefined || value === null || value === "") return null;
+    const numeric = Number.parseFloat(String(value).replace(",", "."));
+    if (!Number.isFinite(numeric)) return null;
+    const width = Math.min(100, Math.max(10, numeric));
+    const gapDeduction = (16 * (100 - width) / 100).toFixed(2);
+    return "calc(" + width + "% - " + gapDeduction + "px)";
+  }
+
+  _applySwitchWidth(node, switchConfig) {
+    const desktopBasis = this._switchWidthBasis(switchConfig.width);
+    if (desktopBasis) node.style.setProperty("--switch-basis", desktopBasis);
+    const mobileBasis = this._switchWidthBasis(switchConfig.width_mobile);
+    if (mobileBasis) node.style.setProperty("--switch-basis-mobile", mobileBasis);
+  }
+
   _switch(switchConfig, index) {
     const entityId = switchConfig.status_entity || switchConfig.entity;
     const health = this._health(entityId);
@@ -1012,6 +1071,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     const stateKey = this._switchStateKey(switchConfig, index);
     const collapsed = this._isSwitchCollapsed(switchConfig, index);
     const node = element("section", "switch-node " + health.key + (collapsed ? " collapsed" : ""));
+    this._applySwitchWidth(node, switchConfig);
     const heading = element("div", "switch-heading");
     const title = element("button", "switch-title");
     title.type = "button";
@@ -1264,23 +1324,37 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const y1 = start.top - bounds.top + start.height / 2;
       const x2 = end.left - bounds.left + end.width / 2;
       const y2 = end.top - bounds.top + end.height / 2;
+      const fromNode = from.closest(".ap-device, .switch-node");
       const targetNode = to.closest(".ap-device, .switch-node");
       const intermediateNodes = [...this.querySelectorAll(".ap-device, .switch-node:not(.collapsed)")].filter((node) => {
-        if (node === targetNode) return false;
+        if (node === targetNode || node === fromNode) return false;
         const rect = node.getBoundingClientRect();
         const top = rect.top - bounds.top;
         const bottom = rect.bottom - bounds.top;
-        return top > Math.min(y1, y2) && bottom < Math.max(y1, y2);
+        const left = rect.left - bounds.left;
+        const right = rect.right - bounds.left;
+        const verticallyBetween = top > Math.min(y1, y2) && bottom < Math.max(y1, y2);
+        const horizontallyInPath = right > Math.min(x1, x2) && left < Math.max(x1, x2);
+        return verticallyBetween && horizontallyInPath;
       });
+      const hasPortRowAbove = (dot) => {
+        const port = dot.closest(".port");
+        const grid = port && port.closest(".ports");
+        if (!grid) return false;
+        const portTop = port.getBoundingClientRect().top;
+        return [...grid.children].some((sibling) => sibling !== port && sibling.getBoundingClientRect().top < portTop - 1);
+      };
+      const obstacleRects = intermediateNodes.map((node) => node.getBoundingClientRect());
+      if (targetNode && hasPortRowAbove(to)) obstacleRects.push(targetNode.getBoundingClientRect());
+      if (fromNode && hasPortRowAbove(from)) obstacleRects.push(fromNode.getBoundingClientRect());
       const wire = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
       const color = WIRE_COLOR_KEYS.find((item) => from.classList.contains(item)) || "cyan";
       wire.setAttribute("class", "wire " + color);
-      if (intermediateNodes.length) {
-        const rectangles = intermediateNodes.map((node) => node.getBoundingClientRect());
-        const firstTop = Math.min(...rectangles.map((rect) => rect.top - bounds.top)) - 12;
-        const lastBottom = Math.max(...rectangles.map((rect) => rect.bottom - bounds.top)) + 12;
-        const leftRail = Math.max(8, Math.min(...rectangles.map((rect) => rect.left - bounds.left)) - 12);
-        const rightRail = Math.min(bounds.width - 8, Math.max(...rectangles.map((rect) => rect.right - bounds.left)) + 12);
+      if (obstacleRects.length) {
+        const firstTop = Math.min(y1, y2, ...obstacleRects.map((rect) => rect.top - bounds.top)) - 12;
+        const lastBottom = Math.max(y1, y2, ...obstacleRects.map((rect) => rect.bottom - bounds.top)) + 12;
+        const leftRail = Math.max(8, Math.min(...obstacleRects.map((rect) => rect.left - bounds.left)) - 12);
+        const rightRail = Math.min(bounds.width - 8, Math.max(...obstacleRects.map((rect) => rect.right - bounds.left)) + 12);
         const rail = Math.abs(x1 - leftRail) + Math.abs(x2 - leftRail) <= Math.abs(x1 - rightRail) + Math.abs(x2 - rightRail) ? leftRail : rightRail;
         wire.setAttribute("points", x1 + "," + y1 + " " + x1 + "," + firstTop + " " + rail + "," + firstTop + " " + rail + "," + lastBottom + " " + x2 + "," + lastBottom + " " + x2 + "," + y2);
       } else {
