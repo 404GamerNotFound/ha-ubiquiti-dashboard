@@ -49,6 +49,11 @@ const EDITOR_STYLE = [
   ":host{display:block;color:var(--primary-text-color,#e1e1e1)}*{box-sizing:border-box}.editor{display:grid;gap:16px;padding:12px 4px;font-family:var(--primary-font-family,sans-serif)}.editor-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.editor-header h2{margin:0;font-size:1.1rem}.editor-header p{margin:4px 0 0;color:var(--secondary-text-color,#888);font-size:.85rem;line-height:1.4}.editor-section{display:grid;gap:12px;padding:14px;border:1px solid var(--divider-color,rgba(127,127,127,.25));border-radius:12px;background:var(--card-background-color,transparent)}.editor-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.editor-section-head h3{margin:0;font-size:.95rem}.editor-section-head p{margin:3px 0 0;color:var(--secondary-text-color,#888);font-size:.78rem}.editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.editor-field{display:grid;gap:5px;min-width:0;color:var(--secondary-text-color,#888);font-size:.75rem;font-weight:600}.editor-field input,.editor-field select{width:100%;min-width:0;height:38px;padding:0 10px;border:1px solid var(--divider-color,rgba(127,127,127,.35));border-radius:7px;outline:none;background:var(--secondary-background-color,#18242c);color:var(--primary-text-color,#e1e1e1);font:inherit;font-weight:400}.editor-field input:focus,.editor-field select:focus{border-color:var(--primary-color,#03a9f4);box-shadow:0 0 0 1px var(--primary-color,#03a9f4)}.editor-list{display:grid;gap:10px}.editor-item{display:grid;gap:10px;padding:12px;border-radius:9px;background:color-mix(in srgb,var(--secondary-background-color,#18242c) 80%,transparent)}.editor-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-item-head strong{font-size:.86rem}.editor-item-toggle{display:flex;align-items:center;gap:6px;min-width:0;padding:0;border:0;background:none;color:var(--primary-text-color,#e1e1e1);font:inherit;cursor:pointer;text-align:left}.editor-item-toggle ha-icon{--mdc-icon-size:18px;width:18px;height:18px;color:var(--secondary-text-color,#888);flex:0 0 auto}.editor-item-toggle strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.editor-item-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.editor-button{min-height:34px;padding:0 11px;border:1px solid var(--primary-color,#03a9f4);border-radius:7px;background:transparent;color:var(--primary-color,#03a9f4);font:inherit;font-size:.78rem;font-weight:650;cursor:pointer}.editor-button:hover{background:color-mix(in srgb,var(--primary-color,#03a9f4) 12%,transparent)}.editor-button.danger{border-color:var(--error-color,#db4437);color:var(--error-color,#db4437)}.editor-button.secondary{border-color:var(--divider-color,rgba(127,127,127,.35));color:var(--primary-text-color,#e1e1e1)}.editor-empty{padding:10px;border:1px dashed var(--divider-color,rgba(127,127,127,.35));border-radius:8px;color:var(--secondary-text-color,#888);font-size:.8rem;text-align:center}.uplink-fields{padding:10px;border-left:2px solid var(--primary-color,#03a9f4);background:color-mix(in srgb,var(--primary-color,#03a9f4) 5%,transparent)}@media(max-width:600px){.editor-grid{grid-template-columns:1fr}.editor-header{flex-direction:column}.editor-section{padding:12px}}",
 ].join("");
 
+const EDITOR_VALIDATION_STYLE = [
+  ".editor-validation{display:grid;grid-template-columns:auto 1fr;gap:7px;align-items:start;padding:10px 11px;border:1px solid color-mix(in srgb,var(--error-color,#db4437) 65%,transparent);border-radius:8px;background:color-mix(in srgb,var(--error-color,#db4437) 10%,transparent);color:var(--primary-text-color,#e1e1e1);font-size:.76rem;line-height:1.4}",
+  ".editor-validation ha-icon{--mdc-icon-size:17px;width:17px;height:17px;color:var(--error-color,#db4437)}.editor-validation ul{display:grid;gap:3px;margin:0;padding-left:18px}",
+].join("");
+
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -185,6 +190,123 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     return section;
   }
 
+  _hasConfigValue(value) {
+    return value !== undefined && value !== null && String(value).trim() !== "";
+  }
+
+  _validationNotice(path) {
+    const issues = (this._validationIssues || []).filter((issue) => issue.path === path);
+    if (!issues.length) return null;
+    const notice = element("div", "editor-validation");
+    notice.setAttribute("role", "status");
+    notice.append(icon("alert-circle"));
+    const messages = document.createElement("ul");
+    issues.forEach((issue) => messages.append(element("li", "", issue.message)));
+    notice.append(messages);
+    return notice;
+  }
+
+  _validateConfig() {
+    const issues = [];
+    const addIssue = (path, message) => issues.push({ path, message });
+    const accessPoints = this._config.access_points || [];
+    const switches = this._config.switches || [];
+    const gateway = this._config.gateway;
+    const deviceEntries = [
+      ...accessPoints.map((accessPoint, index) => ({ path: "ap:" + index, label: "Access Point " + (index + 1), name: accessPoint.name })),
+      ...switches.map((switchConfig, index) => ({ path: "switch:" + index, label: "Switch " + (index + 1), name: switchConfig.name })),
+      ...(gateway ? [{ path: "gateway", label: "Internet Gateway", name: gateway.name }] : []),
+    ].filter((device) => this._hasConfigValue(device.name));
+    const deviceNames = new Map();
+    deviceEntries.forEach((device) => {
+      const name = String(device.name).trim().toLocaleLowerCase();
+      const matchingDevices = deviceNames.get(name) || [];
+      matchingDevices.push(device);
+      deviceNames.set(name, matchingDevices);
+    });
+    deviceNames.forEach((matchingDevices) => {
+      if (matchingDevices.length < 2) return;
+      const sharedName = String(matchingDevices[0].name).trim();
+      const labels = matchingDevices.map((device) => device.label).join(", ");
+      matchingDevices.forEach((device) => addIssue(device.path, "The device name \"" + sharedName + "\" is used by " + labels + ". Device names must be unique."));
+    });
+
+    const portOwners = [
+      ...switches.map((switchConfig, index) => ({ path: "switch:" + index, label: "Switch \"" + (switchConfig.name || index + 1) + "\"", name: switchConfig.name, ports: Array.isArray(switchConfig.ports) ? switchConfig.ports : [] })),
+      ...(gateway ? [{ path: "gateway", label: "Internet Gateway", name: gateway.name, ports: Array.isArray(gateway.ports) ? gateway.ports : [] }] : []),
+    ];
+    const ownersByName = new Map();
+    portOwners.filter((owner) => this._hasConfigValue(owner.name)).forEach((owner) => {
+      const key = String(owner.name).trim().toLocaleLowerCase();
+      const matchingOwners = ownersByName.get(key) || [];
+      matchingOwners.push(owner);
+      ownersByName.set(key, matchingOwners);
+    });
+    portOwners.forEach((owner) => {
+      const portsByNumber = new Map();
+      owner.ports.forEach((port) => {
+        if (!this._hasConfigValue(port.number)) return;
+        const key = String(port.number).trim();
+        const matchingPorts = portsByNumber.get(key) || [];
+        matchingPorts.push(port);
+        portsByNumber.set(key, matchingPorts);
+      });
+      portsByNumber.forEach((matchingPorts, number) => {
+        if (matchingPorts.length > 1) addIssue(owner.path, owner.label + " configures port " + number + " more than once.");
+      });
+    });
+
+    const targetClaims = new Map();
+    const validateUplink = (source, path, label, isSwitch) => {
+      const uplink = source.uplink;
+      if (!uplink || (!this._hasConfigValue(uplink.switch) && !this._hasConfigValue(uplink.port))) return;
+      if (isSwitch && this._hasConfigValue(uplink.local_port || uplink.source_port)) {
+        const localPort = String(uplink.local_port || uplink.source_port).trim();
+        const localPorts = Array.isArray(source.ports) ? source.ports : [];
+        if (!localPorts.some((port) => String(port.number) === localPort)) {
+          addIssue(path, label + " references unknown own uplink port " + localPort + ".");
+        }
+      }
+      if (!this._hasConfigValue(uplink.switch)) {
+        addIssue(path, label + " has an uplink port but no target switch.");
+        return;
+      }
+      const targetName = String(uplink.switch).trim();
+      const matchingOwners = ownersByName.get(targetName.toLocaleLowerCase()) || [];
+      if (!matchingOwners.length) {
+        addIssue(path, label + " references the unknown target switch \"" + targetName + "\".");
+        return;
+      }
+      if (matchingOwners.length > 1) {
+        addIssue(path, label + " references \"" + targetName + "\", but that name is not unique.");
+        return;
+      }
+      const target = matchingOwners[0];
+      if (!this._hasConfigValue(uplink.port)) {
+        addIssue(path, label + " has a target switch but no target port.");
+        return;
+      }
+      const targetPort = String(uplink.port).trim();
+      if (!target.ports.some((port) => String(port.number) === targetPort)) {
+        addIssue(path, label + " references unknown port " + targetPort + " on \"" + targetName + "\".");
+        return;
+      }
+      const claimKey = target.path + ":port:" + targetPort;
+      const matchingClaims = targetClaims.get(claimKey) || [];
+      matchingClaims.push({ path, label, targetName, targetPort });
+      targetClaims.set(claimKey, matchingClaims);
+    };
+    accessPoints.forEach((accessPoint, index) => validateUplink(accessPoint, "ap:" + index, "Access Point " + (index + 1), false));
+    switches.forEach((switchConfig, index) => validateUplink(switchConfig, "switch:" + index, "Switch \"" + (switchConfig.name || index + 1) + "\"", true));
+    targetClaims.forEach((claims) => {
+      if (claims.length < 2) return;
+      const target = "port " + claims[0].targetPort + " on \"" + claims[0].targetName + "\"";
+      const labels = claims.map((claim) => claim.label).join(", ");
+      claims.forEach((claim) => addIssue(claim.path, target + " is assigned to multiple uplinks: " + labels + "."));
+    });
+    return issues;
+  }
+
   _apEditor(ap, index) {
     const item = element("article", "editor-item");
     const head = element("div", "editor-item-head");
@@ -208,6 +330,8 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const actions = element("div", "editor-item-actions");
     actions.append(this._button("Add band metric", "add-band", { index, kind: "secondary" }));
     item.append(head, grid, uplink, element("strong", "", "Band metrics (optional)"), bandList, actions);
+    const validation = this._validationNotice("ap:" + index);
+    if (validation) item.append(validation);
     return item;
   }
 
@@ -289,6 +413,8 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const actions = element("div", "editor-item-actions");
     actions.append(this._button("Add port", "add-port", { switchIndex: index, kind: "secondary" }));
     item.append(head, grid, element("strong", "", "PoE overview (optional)"), poeOverview, uplink, element("strong", "", "Ports"), portList, actions);
+    const validation = this._validationNotice("switch:" + index);
+    if (validation) item.append(validation);
     return item;
   }
 
@@ -345,6 +471,8 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
     const actions = element("div", "editor-item-actions");
     actions.append(this._button("Add LAN port", "add-gateway-port", { kind: "secondary" }), this._button("Remove gateway", "remove-gateway", { kind: "danger" }));
     section.append(grid, element("strong", "", "LAN ports (optional, for switch uplinks)"), portList, actions);
+    const validation = this._validationNotice("gateway");
+    if (validation) section.append(validation);
     return section;
   }
 
@@ -558,8 +686,9 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
   _render() {
     if (!this._config) return;
     this._rendered = true;
+    this._validationIssues = this._validateConfig();
     this._root.replaceChildren();
-    this._root.append(element("style", "", EDITOR_STYLE));
+    this._root.append(element("style", "", EDITOR_STYLE + EDITOR_VALIDATION_STYLE));
     const editor = element("div", "editor");
     const header = element("div", "editor-header");
     const headerCopy = document.createElement("div");
