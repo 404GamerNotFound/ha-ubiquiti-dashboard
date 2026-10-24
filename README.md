@@ -252,11 +252,26 @@ called **plugin** in the HACS backend.
 ~~~bash
 npm run build
 npm run check
+npm test
 ~~~
 
-src/ha-ubiquiti-dashboard.js is the source file. The build copies the
-dependency-free distribution file to dist; this file must remain checked in
-for releases so HACS can install it without a build step.
+src/ha-ubiquiti-dashboard.js is the source file. `package.json` is the source
+of truth for the version. The build synchronizes `CARD_VERSION` in the source
+and writes the dependency-free distribution file to dist; both files must
+remain checked in so HACS can install releases without a build step.
+
+`npm run check` verifies JavaScript syntax, version consistency, and exact
+source/distribution parity. On GitHub tag builds, it also requires the tag
+to equal `v` followed by the package version. For the next release, update
+`package.json`, run the build and checks, and commit both JavaScript files
+before creating the matching tag. CI checks the committed files before
+building so stale distribution files cannot pass unnoticed.
+
+The card uses a shadow root to isolate its styles from other dashboard
+cards. Theme `auto` follows Home Assistant's light/dark mode. Live metrics
+and uplink load colors update in place, preserving focus during metric
+updates; connection geometry is redrawn at most once per animation frame
+and skipped when wires are hidden on compact cards.
 
 ## License and Trademarks
 

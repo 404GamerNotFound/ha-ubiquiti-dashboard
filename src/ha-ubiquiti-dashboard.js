@@ -5,14 +5,14 @@
 
 const CARD_TYPE = "ha-ubiquiti-dashboard";
 const EDITOR_TYPE = CARD_TYPE + "-editor";
-const CARD_VERSION = "1.11.0";
+const CARD_VERSION = "1.0.2";
 const OFFLINE = new Set(["off", "unavailable", "unknown", "disconnected", "down", "false", "none"]);
 const ONLINE = new Set(["on", "online", "connected", "up", "true", "running"]);
 const LINK_COLORS = ["cyan", "violet", "green", "amber", "blue", "pink"];
 const WIRE_COLOR_KEYS = [...LINK_COLORS, "red"];
 
 const STYLE = [
-  ":host{display:block}",
+  ":host{display:block;container-type:inline-size}",
   "*{box-sizing:border-box}",
   ".network-card{--net-bg:#08151f;--net-panel:#0d202d;--net-border:rgba(88,212,247,.24);--net-text:#edf9ff;--net-muted:#9bb4c1;--net-cyan:#26d5fb;--net-green:#45e49a;--net-amber:#ffc958;--net-red:#ff7184;--net-violet:#b286ff;position:relative;overflow:hidden;color:var(--net-text);background:radial-gradient(circle at 50% -45%,#1d5268 0,transparent 42%),var(--net-bg);font-family:var(--primary-font-family,sans-serif)}",
   ".theme-light{--net-bg:#edf5f8;--net-panel:#fff;--net-border:rgba(18,115,150,.23);--net-text:#163141;--net-muted:#547181;background:radial-gradient(circle at 50% -45%,#bcecf8 0,transparent 42%),var(--net-bg)}",
@@ -20,7 +20,7 @@ const STYLE = [
   ".eyebrow{margin:0 0 5px;color:var(--net-cyan);font-size:.68rem;font-weight:800;letter-spacing:.16em}",
   "h1{margin:0;font-size:1.45rem;line-height:1.1;font-weight:700;color:var(--net-text)}",
   ".header-stats{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;color:var(--net-muted);font-size:.76rem}",
-  ".header-stats span{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid var(--net-border);border-radius:999px;background:rgba(10,37,51,.3)}",
+  ".header-stats>span{display:inline-flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid var(--net-border);border-radius:999px;background:rgba(10,37,51,.3)}",
   "ha-icon{--mdc-icon-size:18px;width:18px;height:18px;color:var(--net-cyan)} .header-stats ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".topology{position:relative;isolation:isolate;container-type:inline-size;padding:20px 20px 14px;min-height:300px}.wires{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:visible}",
   ".wire{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:.82;filter:drop-shadow(0 0 4px currentColor)}.wire.cyan{stroke:var(--net-cyan);color:var(--net-cyan)}.wire.violet{stroke:var(--net-violet);color:var(--net-violet)}.wire.green{stroke:var(--net-green);color:var(--net-green)}.wire.amber{stroke:var(--net-amber);color:var(--net-amber)}.wire.blue{stroke:#6db7ff;color:#6db7ff}.wire.pink{stroke:#ff79c5;color:#ff79c5}.wire.red{stroke:var(--net-red);color:var(--net-red)}",
@@ -31,18 +31,21 @@ const STYLE = [
   ".ap-disc{position:relative;display:grid;place-items:center;width:78px;height:78px;margin:12px 0 9px;border:5px solid #eaf7fa;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#cfe2e7);box-shadow:0 0 0 2px rgba(77,227,155,.45),0 0 22px rgba(38,213,251,.36)}.ap-disc.offline{box-shadow:0 0 0 2px rgba(255,113,132,.5),0 0 20px rgba(255,113,132,.2)}.ap-disc.unknown{box-shadow:0 0 0 2px rgba(255,201,88,.5),0 0 20px rgba(255,201,88,.2)}.ap-disc span{color:#254555;font-size:1.8rem;font-weight:300}.ap-disc i{position:absolute;right:7px;bottom:8px;width:10px;height:10px;border:2px solid #efffff;border-radius:50%;background:var(--net-green)}.ap-disc.offline i{background:var(--net-red)}.ap-disc.unknown i{background:var(--net-amber)}",
   ".device-name{max-width:100%;overflow:hidden;color:var(--net-text);font-size:.96rem;font-weight:750;text-overflow:ellipsis;white-space:nowrap}.model{margin-top:3px;color:var(--net-muted);font-size:.72rem}.client-count{display:flex;align-items:center;gap:4px;margin-top:8px;color:var(--net-muted);font-size:.72rem}.client-count ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.client-count strong{color:var(--net-text);font-size:.9rem}.band-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin-top:7px;color:var(--net-muted);font-size:.68rem}.band-metrics strong{color:var(--net-green)}",
   ".uplink{position:relative;display:flex;align-items:center;gap:5px;margin-top:auto;padding-top:9px;color:var(--net-muted);font-size:.66rem}.uplink ha-icon{--mdc-icon-size:14px;width:14px;height:14px}.wire-dot{position:absolute;z-index:4;width:10px;height:10px;border:2px solid var(--net-bg);border-radius:50%;box-shadow:0 0 8px currentColor}.uplink .wire-dot{left:50%;bottom:-18px;transform:translateX(-50%)}.wire-dot.cyan{background:var(--net-cyan);color:var(--net-cyan)}.wire-dot.violet{background:var(--net-violet);color:var(--net-violet)}.wire-dot.green{background:var(--net-green);color:var(--net-green)}.wire-dot.amber{background:var(--net-amber);color:var(--net-amber)}.wire-dot.blue{background:#6db7ff;color:#6db7ff}.wire-dot.pink{background:#ff79c5;color:#ff79c5}.wire-dot.red{background:var(--net-red);color:var(--net-red)}",
-  ".switches{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:16px;margin-top:46px}.switch-node{flex:0 1 var(--switch-basis,100%);max-width:var(--switch-basis,100%);min-width:280px;border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
+  ".switches{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:16px;margin-top:46px}.switch-node{flex:0 1 var(--switch-basis,100%);max-width:var(--switch-basis,100%);min-width:min(280px,100%);border:1px solid var(--net-border);border-radius:16px;background:rgba(5,18,27,.74);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.16)}.theme-light .switch-node{background:rgba(255,255,255,.8)}.switch-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;border-bottom:1px solid var(--net-border)}.switch-title{display:flex;align-items:center;gap:9px;padding:0;border:0;background:none;color:var(--net-text);text-align:left;cursor:pointer}.switch-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--net-border);border-radius:9px;background:rgba(38,213,251,.12)}.switch-title strong,.switch-title small{display:block}.switch-title strong{font-size:.9rem}.switch-title small{margin-top:2px;color:var(--net-muted);font-size:.68rem}.switch-summary{display:flex;align-items:center;gap:9px;color:var(--net-muted);font-size:.7rem}",
   ".switch-face{display:flex;align-items:center;gap:20px;min-height:116px;padding:20px 28px;background:linear-gradient(135deg,#d7e1e5,#f7fbfc 47%,#c8d4d9);color:#173542}.theme-light .switch-face{background:linear-gradient(135deg,#cbd7dc,#fff 47%,#d8e5e9)}.switch-brand{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:46px}.switch-brand b{font-size:2.25rem;font-weight:400;line-height:.9}.switch-brand span{font-size:.43rem;font-weight:800;letter-spacing:.13em}.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(64px,1fr));flex:1;gap:10px}.port{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;padding:0;border:0;background:none;color:#193843;cursor:pointer}.port-connector{position:relative;display:flex;align-items:flex-end;justify-content:center;width:100%;height:43px;border:2px solid #395563;border-radius:6px;background:#071b25;box-shadow:inset 0 -10px #142e3b}.port.online .port-connector{border-color:#28c77e;box-shadow:0 0 9px rgba(40,199,126,.45),inset 0 -10px #142e3b}.port.offline .port-connector{border-color:#e66b78}.port.unknown .port-connector{border-color:#d69b37}.port-led{position:absolute;top:6px;left:7px;width:6px;height:6px;border-radius:50%;background:#657984}.port.online .port-led{background:#41e996;box-shadow:0 0 6px #41e996}.port.offline .port-led{background:#ff7184}.port.unknown .port-led{background:#ffc958}.port b{margin-bottom:6px;color:#b8d1d9;font-size:.67rem}.port em{position:absolute;right:3px;top:3px}.port em ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:var(--net-amber)}.port-dot{top:-7px;left:50%;transform:translateX(-50%)}.port-source-dot{top:auto;bottom:-7px}.port-name{display:block;width:100%;overflow:hidden;color:#38515a;font-size:.68rem;line-height:1.2;text-align:center}.port-name ha-icon{--mdc-icon-size:13px;width:13px;height:13px;color:#557781}.port-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.port-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 6px;min-height:.78rem}.port small{color:#66818a;font-size:.62rem}.port small.poe-power{color:#946e20;font-weight:750}",
   ".empty-ports{grid-column:1/-1;padding:15px;color:#5e7780;text-align:center;font-size:.78rem}.empty-state{display:flex;align-items:center;gap:16px;margin:20px;padding:28px;border:1px dashed var(--net-border);border-radius:16px;color:var(--net-muted)}.empty-state h2{margin:0 0 5px;color:var(--net-text);font-size:1rem}.empty-state p{max-width:480px;margin:0;font-size:.82rem;line-height:1.5}.empty-icon{display:grid;place-items:center;flex:0 0 auto;width:48px;height:48px;border-radius:50%;background:rgba(38,213,251,.13)}.empty-icon ha-icon{width:25px;height:25px}",
   "footer{display:flex;justify-content:space-between;gap:12px;padding:10px 20px 13px;border-top:1px solid var(--net-border);color:var(--net-muted);font-size:.66rem}.legend{display:flex;align-items:center;gap:5px}.legend i{margin-left:5px;width:6px;height:6px}",
   "@container (max-width:680px){.access-points{grid-template-columns:repeat(auto-fit,minmax(220px,280px))}.switch-node{flex-basis:var(--switch-basis-mobile,100%);max-width:var(--switch-basis-mobile,100%)}}",
-  "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(4,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
-  "@media(max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
+  "@container (max-width:590px){.access-points,.access-points.access-points-dense{grid-template-columns:minmax(0,280px)}.wires,.wire-dot{display:none}.switches{margin-top:18px}.switch-face{align-items:flex-start;padding:18px 14px;gap:12px}.switch-brand{min-width:38px}.ports{grid-template-columns:repeat(auto-fit,minmax(43px,1fr));gap:8px}.switch-summary{display:none}}",
+  "@container (max-width:650px){.card-header{flex-direction:column;padding:18px}.header-stats{justify-content:flex-start}.topology{padding:14px}.device{height:254px}.empty-state{margin:14px;padding:20px}footer{padding:10px 14px;flex-direction:column}}",
   ".switch-group{display:grid;gap:10px;flex:1 1 100%}.switch-group-heading{display:flex;align-items:center;gap:7px;padding:2px 4px;color:var(--net-cyan);font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.switch-group-heading ha-icon{--mdc-icon-size:16px;width:16px;height:16px}.switch-group-nodes{display:flex;flex-wrap:wrap;gap:16px}.switch-heading-actions{display:flex;align-items:center;gap:9px}.collapse-toggle{display:grid;place-items:center;width:30px;height:30px;padding:0;border:1px solid var(--net-border);border-radius:8px;background:rgba(38,213,251,.08);color:var(--net-cyan);cursor:pointer}.collapse-toggle ha-icon{--mdc-icon-size:17px;width:17px;height:17px}.switch-node.collapsed .switch-face{display:none}",
   ".client-value{color:var(--net-text);font-size:.9rem;font-weight:750}.band-value{color:var(--net-green);font-weight:700}.port-metrics span{color:#66818a;font-size:.62rem}.port-metrics span.poe-power{color:#946e20;font-weight:750}",
-  ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
+  ".gateway-node{margin-top:26px}.gateway-face{background:linear-gradient(135deg,#123145,#1b435c 47%,#0d2635);color:#eaf7fb}.theme-light .gateway-face{background:linear-gradient(135deg,#d7ecf5,#fff 47%,#cfe8f2);color:#123145}.gateway-brand{display:grid;place-items:center;min-width:46px}.gateway-brand ha-icon{--mdc-icon-size:34px;width:34px;height:34px;color:var(--net-cyan)}.gateway-metrics{min-width:0;overflow-wrap:anywhere;display:flex;flex-wrap:wrap;gap:10px 16px;color:inherit;opacity:.85;font-size:.78rem;font-weight:650}.gateway-metrics span{display:inline-flex;align-items:center;gap:4px}.gateway-metrics ha-icon{--mdc-icon-size:15px;width:15px;height:15px}",
   ".header-gateway-chip.online{color:var(--net-green)}.header-gateway-chip.offline{color:var(--net-red)}.header-gateway-chip.unknown{color:var(--net-amber)}.header-gateway-chip ha-icon{color:inherit}",
-  ".header-stats span.header-alert-chip{color:var(--net-red);border-color:rgba(255,113,132,.5);background:rgba(255,113,132,.14);font-weight:700}.header-alert-chip ha-icon{color:var(--net-red)}",
+  "@container (max-width:590px){.gateway-face{flex-wrap:wrap}.gateway-face>.ports{flex-basis:100%}.switch-title,.switch-title>span{min-width:0}.switch-title strong{overflow-wrap:anywhere}}",
+  ".gateway-face .port-name,.gateway-face .port-metrics span{color:inherit}.gateway-face .port-name{opacity:.85}",
+  "@media(prefers-reduced-motion:reduce){.device,.port,.switch-title{transition:none}}",
+  ".header-stats>span.header-alert-chip{color:var(--net-red);border-color:rgba(255,113,132,.5);background:rgba(255,113,132,.14);font-weight:700}.header-alert-chip ha-icon{color:var(--net-red)}",
 ].join("");
 
 const EDITOR_STYLE = [
@@ -750,6 +753,11 @@ class UbiquitiNetworkDashboardEditor extends HTMLElement {
 }
 
 class UbiquitiNetworkDashboard extends HTMLElement {
+  constructor() {
+    super();
+    this._root = this.attachShadow({ mode: "open" });
+  }
+
   static getStubConfig() {
     return { title: "UniFi Network", access_points: [], switches: [] };
   }
@@ -777,6 +785,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   set hass(hass) {
     const stateSignature = this._hassStateSignature(hass);
     this._hass = hass;
+    this._refreshTheme();
     if (stateSignature === this._stateSignature) {
       this._refreshDynamicValues();
       return;
@@ -787,13 +796,35 @@ class UbiquitiNetworkDashboard extends HTMLElement {
 
   connectedCallback() {
     this.style.display = "block";
-    this._resizeObserver = new ResizeObserver(() => this._drawWires());
+    this._resizeObserver = new ResizeObserver(() => this._scheduleWires());
     this._resizeObserver.observe(this);
     this._render();
   }
 
   disconnectedCallback() {
     this._resizeObserver && this._resizeObserver.disconnect();
+    cancelAnimationFrame(this._wireFrame);
+    cancelAnimationFrame(this._scrollFrame);
+    this._wireFrame = null;
+  }
+
+  _scheduleWires() {
+    if (!this.isConnected || this._wireFrame != null) return;
+    this._wireFrame = requestAnimationFrame(() => {
+      this._wireFrame = null;
+      this._drawWires();
+    });
+  }
+
+  _theme() {
+    if (["light", "dark"].includes(this._config?.theme)) return this._config.theme;
+    return this._hass?.themes?.darkMode === false ? "light" : "dark";
+  }
+
+  _refreshTheme() {
+    const card = this._root.querySelector(".network-card");
+    const className = "network-card theme-" + this._theme();
+    if (card && card.className !== className) card.className = className;
   }
 
   getCardSize() {
@@ -833,7 +864,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     }
     return [...entityIds].map((entityId) => {
       const state = hass.states[entityId];
-      return [entityId, state && state.state].join("\u001f");
+      return [entityId, state && state.state, state?.attributes?.friendly_name].join("\u001f");
     }).join("\u001e");
   }
 
@@ -892,7 +923,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     if (format === "traffic") value = this._traffic(entityId);
     if (format === "poe-power") value = this._poePower(entityId);
     if (format === "latency") value = this._latency(entityId);
-    node.textContent = value === "" ? (node.dataset.liveFallback || "") : (node.dataset.livePrefix || "") + value;
+    const text = String(value === "" ? (node.dataset.liveFallback || "") : (node.dataset.livePrefix || "") + value);
+    if (node.textContent !== text) node.textContent = text;
   }
 
   _totalClientCount() {
@@ -904,13 +936,35 @@ class UbiquitiNetworkDashboard extends HTMLElement {
 
   _refreshDynamicValues() {
     if (!this.isConnected || !this._config) return;
-    this.querySelectorAll("[data-live-entity]").forEach((node) => this._refreshLiveNode(node));
-    this.querySelectorAll("[data-live-total-clients]").forEach((node) => {
-      node.textContent = this._totalClientCount() + " Clients";
+    this._root.querySelectorAll("[data-live-entity]").forEach((node) => this._refreshLiveNode(node));
+    this._root.querySelectorAll("[data-live-total-clients]").forEach((node) => {
+      const text = this._totalClientCount() + " Clients";
+      if (node.textContent !== text) node.textContent = text;
     });
-    this.querySelectorAll("[data-live-switch-poe-index]").forEach((node) => {
+    this._root.querySelectorAll("[data-live-switch-poe-index]").forEach((node) => {
       const switchConfig = this._config.switches[Number(node.dataset.liveSwitchPoeIndex)];
-      node.textContent = switchConfig ? this._switchPoeSummary(switchConfig, switchConfig.ports || []) : "";
+      const text = switchConfig ? this._switchPoeSummary(switchConfig, switchConfig.ports || []) : "";
+      if (node.textContent !== text) node.textContent = text;
+    });
+    this._refreshWireColors();
+  }
+
+  _refreshWireColors() {
+    this._root.querySelectorAll("[data-wire-from]").forEach((dot) => {
+      const id = dot.dataset.wireFrom;
+      const isAp = id.startsWith("ap-");
+      const index = Number(id.slice(isAp ? 3 : 7));
+      const device = (isAp ? this._config.access_points : this._config.switches)[index];
+      if (!device) return;
+      const localPort = (device.ports || []).find((port) => String(port.number) === String(device.uplink?.local_port || device.uplink?.source_port));
+      const load = this._wireLoad(this._findUplinkPort(device.uplink)) || (!isAp && this._wireLoad(localPort));
+      const color = load ? load.color : LINK_COLORS[(isAp ? index : this._config.access_points.length + index) % LINK_COLORS.length];
+      const title = load ? load.title : "";
+      const nodes = [dot, ...this._root.querySelectorAll(`[data-wire-to="${id}"], [data-wire-id="${id}"]`)];
+      nodes.forEach((node) => {
+        WIRE_COLOR_KEYS.forEach((key) => node.classList.toggle(key, key === color));
+        if (node.tagName.toLowerCase() !== "polyline") node.title = title;
+      });
     });
   }
 
@@ -1231,7 +1285,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       collapse.title = nextCollapsed ? "Expand switch" : "Collapse switch";
       collapse.setAttribute("aria-expanded", String(!nextCollapsed));
       collapse.replaceChildren(icon(nextCollapsed ? "chevron-down" : "chevron-up"));
-      requestAnimationFrame(() => this._drawWires());
+      this._scheduleWires();
     });
     const headingActions = element("div", "switch-heading-actions");
     headingActions.append(summary, collapse);
@@ -1334,8 +1388,8 @@ class UbiquitiNetworkDashboard extends HTMLElement {
   _render() {
     if (!this.isConnected || !this._config) return;
     const scrollPositions = this._captureScrollPositions();
-    this.replaceChildren();
-    const card = element("ha-card", "network-card theme-" + (["light", "dark"].includes(this._config.theme) ? this._config.theme : "auto"));
+    this._root.replaceChildren();
+    const card = element("ha-card", "network-card theme-" + this._theme());
     card.style.display = "block";
     card.append(element("style", "", STYLE));
     const accessPoints = this._config.access_points || [];
@@ -1424,18 +1478,19 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     });
     footer.append(legend, element("span", "", "Ubiquiti Network Dashboard"));
     card.append(footer);
-    this.append(card);
+    this._root.append(card);
     this._restoreScrollPositions(scrollPositions);
-    requestAnimationFrame(() => {
-      this._drawWires();
+    this._scheduleWires();
+    cancelAnimationFrame(this._scrollFrame);
+    this._scrollFrame = requestAnimationFrame(() => {
       this._restoreScrollPositions(scrollPositions);
-      requestAnimationFrame(() => this._restoreScrollPositions(scrollPositions));
     });
   }
 
   _drawWires() {
-    const topology = this.querySelector(".topology");
-    const svg = this.querySelector(".wires");
+    if (!this.isConnected) return;
+    const topology = this._root.querySelector(".topology");
+    const svg = this._root.querySelector(".wires");
     if (!topology || !svg) return;
     const bounds = topology.getBoundingClientRect();
     if (!bounds.width || !bounds.height) return;
@@ -1443,8 +1498,10 @@ class UbiquitiNetworkDashboard extends HTMLElement {
     svg.setAttribute("width", String(bounds.width));
     svg.setAttribute("height", String(bounds.height));
     svg.replaceChildren();
-    this.querySelectorAll("[data-wire-from]").forEach((from) => {
-      const to = this.querySelector("[data-wire-to='" + from.dataset.wireFrom + "']");
+    // Wires are hidden on compact cards; avoid measuring every port there.
+    if (getComputedStyle(svg).display === "none") return;
+    this._root.querySelectorAll("[data-wire-from]").forEach((from) => {
+      const to = this._root.querySelector("[data-wire-to='" + from.dataset.wireFrom + "']");
       if (!to) return;
       if (from.closest(".switch-node.collapsed") || to.closest(".switch-node.collapsed")) return;
       const start = from.getBoundingClientRect();
@@ -1455,7 +1512,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const y2 = end.top - bounds.top + end.height / 2;
       const fromNode = from.closest(".ap-device, .switch-node");
       const targetNode = to.closest(".ap-device, .switch-node");
-      const intermediateNodes = [...this.querySelectorAll(".ap-device, .switch-node:not(.collapsed)")].filter((node) => {
+      const intermediateNodes = [...this._root.querySelectorAll(".ap-device, .switch-node:not(.collapsed)")].filter((node) => {
         if (node === targetNode || node === fromNode) return false;
         const rect = node.getBoundingClientRect();
         const top = rect.top - bounds.top;
@@ -1497,6 +1554,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       const toSafe = !toEdge || !crossesOtherRow(to, x1);
       const needsRail = intermediateNodes.length > 0 || (fromEdge && !fromSafe) || (toEdge && !toSafe);
       const wire = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      wire.dataset.wireId = from.dataset.wireFrom;
       const color = WIRE_COLOR_KEYS.find((item) => from.classList.contains(item)) || "cyan";
       wire.setAttribute("class", "wire " + color);
       if (needsRail) {
@@ -1542,6 +1600,7 @@ class UbiquitiNetworkDashboard extends HTMLElement {
       }
       svg.append(wire);
     });
+    this._refreshWireColors();
   }
 }
 
